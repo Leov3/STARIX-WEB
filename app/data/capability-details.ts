@@ -1,0 +1,32 @@
+import type { CapabilityDetail } from "@/app/components/capability-detail-page";
+
+export const capabilityDetails: Record<string, CapabilityDetail> = {
+  "automatizacion-ia": {
+    index: "02", hero: ["Automatización", "e", "IA."], intro: "Diseñamos flujos que eliminan trabajo manual y convierten la información en acción.",
+    buildTitle: "Sistemas que hacen avanzar la operación.", buildCopy: "Automatizamos lo repetitivo y diseñamos puntos de control claros para que el equipo dedique su tiempo a lo que sí requiere criterio.",
+    offerings: ["Automatización de procesos", "Flujos de aprobación", "Asistentes con IA", "Reportes automáticos", "Captura y clasificación de datos", "Integraciones operativas"],
+    approachTitle: "La IA necesita un proceso claro.", approachCopy: "Antes de automatizar, entendemos dónde se pierde tiempo, qué decisiones se repiten y qué información necesita el sistema.", approach: [{ title: "Proceso", copy: "Qué debe ocurrir y en qué orden." }, { title: "Información", copy: "Qué datos activan cada paso." }, { title: "Control", copy: "Dónde una persona debe decidir." }],
+    flowTitle: "De tarea manual a flujo confiable.", flow: ["Diagnóstico", "Prioridad", "Diseño", "Automatización", "Pruebas", "Adopción", "Mejora"], capabilitiesTitle: "Automatización útil, no automatización por moda.", capabilities: ["Mapeo de procesos", "APIs", "Webhooks", "IA generativa", "OCR", "Notificaciones", "Dashboards", "Validaciones", "Documentación"], principle: "No automatizamos por automatizar.", principleAccent: "Diseñamos sistemas que liberan capacidad.", ctaTitle: "¿Qué proceso quieres simplificar?", ctaCopy: "Cuéntanos dónde se está yendo el tiempo. Empezamos por entenderlo.",
+  },
+  "implementaciones-integraciones": {
+    index: "03", hero: ["Implementaciones", "e", "integraciones."], intro: "Implementamos ERP, CRM y Odoo para que las herramientas trabajen como un solo sistema.",
+    buildTitle: "Herramientas que comparten la misma realidad.", buildCopy: "Configuramos e integramos las plataformas que necesita tu operación, priorizando Odoo cuando ofrece la mejor base para crecer.",
+    offerings: ["Implementación de Odoo", "ERP y CRM", "Inventario y ventas", "Facturación", "Integración de sistemas", "Migración de datos"],
+    approachTitle: "Primero la operación; después la herramienta.", approachCopy: "Una implementación solo funciona cuando refleja cómo trabaja el negocio y deja espacio para evolucionar sin crear nueva fricción.", approach: [{ title: "Operación", copy: "Cómo trabaja hoy el equipo." }, { title: "Modelo", copy: "Qué debe ordenar el sistema." }, { title: "Conexión", copy: "Qué herramientas deben hablar entre sí." }],
+    flowTitle: "De procesos aislados a una operación conectada.", flow: ["Diagnóstico", "Modelo", "Configuración", "Datos", "Integración", "Salida", "Acompañamiento"], capabilitiesTitle: "La base para operar con claridad.", capabilities: ["Odoo", "CRM", "ERP", "Inventario", "Ventas", "Compras", "Facturación", "APIs", "Migración", "Capacitación"], principle: "No instalamos software y desaparecemos.", principleAccent: "Construimos una operación que el equipo puede usar.", ctaTitle: "¿Necesitas implementar un ERP?", ctaCopy: "Revisemos si Odoo u otra integración es la base correcta para tu operación.",
+  },
+  "marca-presencia-digital": {
+    index: "04", hero: ["Marca y", "presencia", "digital."], intro: "Construimos una presencia digital que comunica con claridad el nivel real de tu negocio.",
+    buildTitle: "Una marca que se entiende y se recuerda.", buildCopy: "Unimos identidad, mensaje y experiencia digital para que cada punto de contacto dé confianza y mueva una conversación hacia adelante.",
+    offerings: ["Identidad visual", "Sitios web", "Dirección creativa", "Mensajería de marca", "Sistemas de contenido", "Experiencias de conversión"],
+    approachTitle: "La presencia digital debe tener una función.", approachCopy: "No se trata solo de verse bien. Se trata de expresar una posición clara, orientar a la persona correcta y facilitar el siguiente paso.", approach: [{ title: "Posición", copy: "Qué hace diferente al negocio." }, { title: "Mensaje", copy: "Cómo se explica con claridad." }, { title: "Experiencia", copy: "Cómo se convierte en una acción." }],
+    flowTitle: "De percepción dispersa a una presencia coherente.", flow: ["Contexto", "Posición", "Identidad", "Mensaje", "Diseño", "Lanzamiento", "Evolución"], capabilitiesTitle: "Todo lo necesario para una presencia con dirección.", capabilities: ["Estrategia de marca", "Identidad", "Web design", "Copywriting", "Dirección de arte", "Diseño UI", "Sistemas visuales", "SEO técnico", "Analítica"], principle: "La marca no es una capa decorativa.", principleAccent: "Es cómo el negocio se vuelve reconocible.", ctaTitle: "¿Tu presencia representa tu negocio?", ctaCopy: "Hablemos de lo que debe cambiar para que tu marca comunique con más claridad.",
+  },
+  "estrategia-arquitectura-digital": {
+    index: "05", hero: ["Estrategia", "y arquitectura", "digital."], intro: "Definimos qué construir, qué conectar y qué debe cambiar antes de elegir una herramienta.",
+    buildTitle: "Claridad antes de construir.", buildCopy: "Convertimos la complejidad operativa en una dirección concreta: prioridades, decisiones de sistema y una ruta que el equipo puede ejecutar.",
+    offerings: ["Diagnóstico digital", "Arquitectura de sistemas", "Mapa de procesos", "Roadmap tecnológico", "Priorización", "Diseño de servicios"],
+    approachTitle: "No empezamos con una solución predeterminada.", approachCopy: "Entendemos el negocio completo para distinguir los síntomas del problema real y decidir qué cambio tendrá mayor impacto.", approach: [{ title: "Contexto", copy: "Qué está pasando realmente." }, { title: "Fricción", copy: "Qué impide avanzar." }, { title: "Dirección", copy: "Qué debe cambiar primero." }],
+    flowTitle: "De complejidad a una ruta accionable.", flow: ["Escuchar", "Mapear", "Detectar", "Priorizar", "Arquitectar", "Planificar", "Activar"], capabilitiesTitle: "Decisiones que conectan negocio y tecnología.", capabilities: ["Investigación", "Workshops", "Mapeo de procesos", "Arquitectura", "Roadmaps", "Priorización", "Service design", "Documentación", "Gobernanza"], principle: "La tecnología no corrige una dirección confusa.", principleAccent: "Primero diseñamos el sistema correcto.", ctaTitle: "¿Necesitas ordenar lo que sigue?", ctaCopy: "Empecemos por entender tu operación y convertirla en una dirección clara.",
+  },
+};

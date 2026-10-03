@@ -1,0 +1,17 @@
+.artwork { width: 100%; min-width: 0; isolation: isolate; }
+.artwork svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--font-inter), Arial, sans-serif; }
+.surface { fill: #1b1d21; stroke: #7a7d71; stroke-width: 1.2; transition: fill 180ms, stroke 180ms; }
+.label { fill: #f3f2e9; font-size: 23px; font-weight: 400; letter-spacing: -.5px; }
+.darkLabel { fill: #141510; font-size: 23px; }
+.note { fill: #bfc1b3; font-size: 15px; letter-spacing: 1px; }
+.rule { stroke: #74786a; stroke-width: 1.2; fill: none; }
+.faintRule { stroke: #383d35; stroke-width: 1; fill: none; }
+.connector { stroke: #8e927c; stroke-width: 1.6; fill: none; }
+.signal { stroke: #e0bd67; stroke-width: 3; fill: none; stroke-dasharray: 10 500; opacity: 0; pointer-events: none; }
+.selected .surface { fill: #2c281d; stroke: #d7b65e; stroke-width: 2; }
+.selected .label { fill: #e9c977; }
+.artwork[data-entered="true"] .signal { animation: routeSignal 1800ms ease-out 1; }
+.artwork[data-entered="true"] .frontPlane { animation: planeSettle 650ms cubic-bezier(.2,.7,.3,1) 1; }
+@keyframes routeSignal { 0% { opacity: 0; stroke-dashoffset: 45; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; stroke-dashoffset: -470; } }
+@keyframes planeSettle { from { transform: translateY(10px); } to { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .artwork *, .artwork[data-entered="true"] .signal, .artwork[data-entered="true"] .frontPlane { animation: none !important; transition: none !important; } }
