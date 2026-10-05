@@ -190,7 +190,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <RouteTransitionContext.Provider value={value}>
-      <Navbar />
+      {pathname !== "/gracias" && <Navbar />}
       <div className="route-stage">{children}</div>
       <AnimatePresence>
         {curtainPhase && (

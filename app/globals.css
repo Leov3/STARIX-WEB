@@ -1025,13 +1025,20 @@ html[data-route-transition="backward"]::view-transition-new(root) { z-index: 1; 
 .contact-options .contact-option:last-child { grid-column: auto; }
 .automation-hero-actions > p { display: none; }
 
-.thank-you-page { position: relative; display: grid; min-height: 100svh; overflow: hidden; place-items: center; padding: 120px 32px; background: radial-gradient(circle at 76% 42%, rgba(200,162,74,.16), transparent 24%), #0a0a0b; color: var(--star); isolation: isolate; }
-.thank-you-grid { position: absolute; z-index: -1; inset: 0; background-image: linear-gradient(rgba(200,162,74,.11) 1px, transparent 1px), linear-gradient(90deg, rgba(200,162,74,.11) 1px, transparent 1px); background-size: min(15vw, 230px) min(15vw, 230px); mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent); opacity: .46; }
-.thank-you-content { width: min(100%, 820px); text-align: center; }
+.thank-you-page { position: relative; display: grid; min-height: 100svh; overflow: hidden; place-items: center; padding: 80px 32px; background: var(--space); color: var(--star); isolation: isolate; }
+.thank-you-page::before { position: absolute; z-index: 1; inset: 0; background: rgba(10,10,11,.38); content: ""; pointer-events: none; }
+.thank-you-page::after { position: absolute; z-index: 2; right: 0; bottom: 0; left: 0; height: 50%; background: linear-gradient(180deg, rgba(10,10,11,0) 0%, rgba(10,10,11,.96) 82%, var(--space) 100%); content: ""; pointer-events: none; }
+.thank-you-scene { position: absolute; z-index: 0; inset: 0; overflow: hidden; }
+.thank-you-content { position: relative; z-index: 3; width: min(100%, 820px); text-align: center; }
 .thank-you-mark { margin: 42px 0 30px; color: var(--gold); font-size: clamp(4rem, 8vw, 7rem); line-height: 1; text-shadow: 0 0 45px rgba(200,162,74,.42); }
 .thank-you-content h1 { margin: 0; font-size: clamp(4rem, 8.2vw, 8.8rem); font-weight: 400; letter-spacing: -.085em; line-height: .82; text-transform: uppercase; }.thank-you-content h1 span { color: var(--gold); }
 .thank-you-content > p:not(.section-index) { max-width: 450px; margin: 34px auto 0; color: rgba(247,247,242,.72); font-size: 16px; line-height: 1.6; }
-.thank-you-link { display: inline-flex; gap: 18px; margin-top: 44px; border: 1px solid var(--gold); border-radius: 999px; padding: 16px 22px; color: var(--star); font-family: var(--font-michroma), sans-serif; font-size: 9px; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; transition: background-color .25s ease, color .25s ease; }.thank-you-link:hover { background: var(--gold); color: var(--space); }
+.thank-you-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 44px; }
+.thank-you-link { display: inline-flex; align-items: center; justify-content: center; gap: 11px; min-height: 48px; border: 1px solid rgba(247,247,242,.48); border-radius: 999px; padding: 13px 18px; color: var(--star); background: rgba(10,10,11,.32); font-family: var(--font-michroma), sans-serif; font-size: 8px; letter-spacing: .06em; text-decoration: none; text-transform: uppercase; backdrop-filter: blur(8px); transition: background-color .25s ease, border-color .25s ease, color .25s ease, transform .25s ease; }.thank-you-link:hover { transform: translateY(-2px); }
+.thank-you-link-primary { border-color: var(--gold); background: var(--gold); color: var(--space); }.thank-you-link-primary:hover { background: #d7b45d; border-color: #d7b45d; }
+.thank-you-link-whatsapp { border-color: rgba(92,210,132,.62); color: #a4e6b7; background: rgba(37,170,76,.14); }.thank-you-link-whatsapp:hover { border-color: #63d489; background: rgba(37,170,76,.26); color: var(--star); }
+.thank-you-link-gap { cursor: not-allowed; border-style: dashed; color: rgba(247,247,242,.52); }.thank-you-link-gap small { color: var(--gold); font: inherit; font-size: 7px; letter-spacing: .04em; }
+@media (max-width: 620px) { .thank-you-page { padding: 66px 18px 34px; } .thank-you-mark { margin: 28px 0 22px; } .thank-you-content h1 { font-size: clamp(3.25rem, 16vw, 5.2rem); } .thank-you-actions { display: grid; width: min(100%, 310px); margin: 34px auto 0; } .thank-you-link { width: 100%; } }
 
 /* Identity showcase: centered editorial intro with a horizontal strip of brand work. */
 .brand-studio-service.is-identity-feature { min-height: clamp(720px, 56vw, 900px); overflow: hidden; }
