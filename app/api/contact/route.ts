@@ -79,9 +79,10 @@ export async function POST(request: Request) {
   };
 
   try {
+    const contactSecret = process.env.CONTACT_WEBHOOK_SECRET;
     const response = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(contactSecret ? { "x-starix-contact-secret": contactSecret } : {}) },
       body: JSON.stringify(payload),
       cache: "no-store",
       signal: AbortSignal.timeout(12_000),
@@ -90,8 +91,11 @@ export async function POST(request: Request) {
     if (!response.ok) {
       return NextResponse.json({ ok: false, error: "upstream_error" }, { status: 502 });
     }
-
-    return NextResponse.json({ ok: true }, { status: 202 });
+    let upstream: Record<string, unknown> = {};
+    try { upstream = await response.json() as Record<string, unknown>; } catch { /* Legacy n8n workflows may respond without JSON. */ }
+    const gapToken = typeof upstream.gapToken === "string" && /^[A-Za-z0-9_-]{32,512}$/.test(upstream.gapToken) ? upstream.gapToken : undefined;
+    const leadId = typeof upstream.leadId === "string" || typeof upstream.leadId === "number" ? String(upstream.leadId) : undefined;
+    return NextResponse.json({ ok: true, gapToken, leadId }, { status: 202 });
   } catch {
     return NextResponse.json({ ok: false, error: "upstream_unavailable" }, { status: 502 });
   }

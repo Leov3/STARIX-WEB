@@ -3,7 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { GAP_SESSION_KEY } from "@/app/lib/gap";
 
 export default function ThankYouExperience() {
   const pageRef = useRef<HTMLElement>(null);
@@ -19,6 +20,14 @@ export default function ThankYouExperience() {
   const starsScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [1, 1.04]);
   const astronautY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [0, -72]);
   const astronautScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [1, 1.035]);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(GAP_SESSION_KEY);
+      const token = saved ? (JSON.parse(saved) as { token?: string }).token : undefined;
+      if (token) void fetch("/api/gap/event", { method: "POST", headers: { "Content-Type": "application/json", "x-starix-gap-token": token }, body: JSON.stringify({ event: "thankyou_viewed" }) });
+    } catch { /* Analytics must never affect the confirmation screen. */ }
+  }, []);
 
   return (
     <main ref={pageRef} className="thank-you-page">
