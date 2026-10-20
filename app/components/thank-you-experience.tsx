@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
 import { FormEvent, useRef, useState } from "react";
 
@@ -66,7 +67,15 @@ export default function ThankYouExperience() {
       </div>
       <section className="thank-you-content">
         <p className="section-index">CONTACTO / RECIBIDO</p>
-        <div className="thank-you-mark" aria-hidden="true">✦</div>
+        <Image
+          className="thank-you-mark"
+          src="/brand/starix-mark.png"
+          alt=""
+          width={294}
+          height={295}
+          sizes="(max-width: 620px) 72px, 112px"
+          priority
+        />
         <h1>Gracias por<br /><span>escribirnos.</span></h1>
         <p>Recibimos tu información. Revisaremos tu solicitud y te contactaremos pronto.</p>
         <div className="thank-you-actions">

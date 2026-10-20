@@ -1030,7 +1030,7 @@ html[data-route-transition="backward"]::view-transition-new(root) { z-index: 1; 
 .thank-you-page::after { position: absolute; z-index: 2; right: 0; bottom: 0; left: 0; height: 50%; background: linear-gradient(180deg, rgba(10,10,11,0) 0%, rgba(10,10,11,.96) 82%, var(--space) 100%); content: ""; pointer-events: none; }
 .thank-you-scene { position: absolute; z-index: 0; inset: 0; overflow: hidden; }
 .thank-you-content { position: relative; z-index: 3; width: min(100%, 820px); text-align: center; }
-.thank-you-mark { margin: 42px 0 30px; color: var(--gold); font-size: clamp(4rem, 8vw, 7rem); line-height: 1; text-shadow: 0 0 45px rgba(200,162,74,.42); }
+.thank-you-mark { display: block; width: clamp(4.5rem, 8vw, 7rem); height: auto; margin: 42px auto 30px; filter: drop-shadow(0 0 18px rgba(200,162,74,.58)) drop-shadow(0 0 45px rgba(200,162,74,.26)); }
 .thank-you-content h1 { margin: 0; font-size: clamp(4rem, 8.2vw, 8.8rem); font-weight: 400; letter-spacing: -.085em; line-height: .82; text-transform: uppercase; }.thank-you-content h1 span { color: var(--gold); }
 .thank-you-content > p:not(.section-index) { max-width: 450px; margin: 34px auto 0; color: rgba(247,247,242,.72); font-size: 16px; line-height: 1.6; }
 .thank-you-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 44px; }
