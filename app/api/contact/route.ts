@@ -36,8 +36,14 @@ export async function POST(request: Request) {
   const meetingTime = readText(data.meetingTime, 5);
   const timezone = readText(data.timezone, 100);
   const projectContext = readText(data.projectContext, 1_000);
+  const gapData = data.gap && typeof data.gap === "object" ? data.gap as Record<string, unknown> : null;
+  const gapGoal = readText(gapData?.goal, 1_000);
+  const gapChallenge = readText(gapData?.challenge, 1_000);
+  const gapTimeline = readText(gapData?.timeline, 64);
+  const gapTeamSize = readText(gapData?.teamSize, 64);
   const consent = data.consent === true;
   const hasMeetingRequest = Boolean(meetingDate || meetingTime);
+  const hasGap = Boolean(gapData);
 
   if (
     name.length < 2 ||
@@ -45,7 +51,8 @@ export async function POST(request: Request) {
     phone.length < 7 ||
     !allowedInterests.has(interest) ||
     !consent ||
-    (hasMeetingRequest && (!/^\d{4}-\d{2}-\d{2}$/.test(meetingDate) || !/^\d{2}:\d{2}$/.test(meetingTime) || projectContext.length < 10))
+    (hasMeetingRequest && (!/^\d{4}-\d{2}-\d{2}$/.test(meetingDate) || !/^\d{2}:\d{2}$/.test(meetingTime) || projectContext.length < 10)) ||
+    (hasGap && (gapGoal.length < 10 || gapChallenge.length < 10 || !gapTimeline || !gapTeamSize))
   ) {
     return NextResponse.json({ ok: false, error: "invalid_fields" }, { status: 422 });
   }
@@ -67,6 +74,7 @@ export async function POST(request: Request) {
     source: "starix_web",
     page,
     meetingRequest: hasMeetingRequest ? { date: meetingDate, time: meetingTime, timezone, projectContext } : undefined,
+    gap: hasGap ? { goal: gapGoal, challenge: gapChallenge, timeline: gapTimeline, teamSize: gapTeamSize } : undefined,
     submittedAt: new Date().toISOString(),
   };
 
