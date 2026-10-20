@@ -35,6 +35,7 @@ export async function POST(request: Request) {
   const meetingDate = readText(data.meetingDate, 10);
   const meetingTime = readText(data.meetingTime, 5);
   const timezone = readText(data.timezone, 100);
+  const projectContext = readText(data.projectContext, 1_000);
   const consent = data.consent === true;
   const hasMeetingRequest = Boolean(meetingDate || meetingTime);
 
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
     phone.length < 7 ||
     !allowedInterests.has(interest) ||
     !consent ||
-    (hasMeetingRequest && (!/^\d{4}-\d{2}-\d{2}$/.test(meetingDate) || !/^\d{2}:\d{2}$/.test(meetingTime)))
+    (hasMeetingRequest && (!/^\d{4}-\d{2}-\d{2}$/.test(meetingDate) || !/^\d{2}:\d{2}$/.test(meetingTime) || projectContext.length < 10))
   ) {
     return NextResponse.json({ ok: false, error: "invalid_fields" }, { status: 422 });
   }
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
     consent,
     source: "starix_web",
     page,
-    meetingRequest: hasMeetingRequest ? { date: meetingDate, time: meetingTime, timezone } : undefined,
+    meetingRequest: hasMeetingRequest ? { date: meetingDate, time: meetingTime, timezone, projectContext } : undefined,
     submittedAt: new Date().toISOString(),
   };
 

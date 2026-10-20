@@ -55,6 +55,7 @@ export default function ThankYouExperience() {
         body: JSON.stringify({
           ...contact,
           page: window.location.pathname,
+          projectContext: formData.get("projectContext"),
           meetingDate: formData.get("meetingDate"),
           meetingTime: formData.get("meetingTime"),
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -92,17 +93,21 @@ export default function ThankYouExperience() {
           priority
         />
         <h1>Gracias por<br /><span>escribirnos.</span></h1>
-        <p>Recibimos tu información. Revisaremos tu solicitud y te contactaremos pronto.</p>
+        <p>Hemos recibido tu solicitud. El siguiente paso es conocer mejor tu proyecto para preparar una conversación realmente útil.</p>
         <div className="thank-you-actions">
-          <button type="button" className="thank-you-link thank-you-link-uniform thank-you-link-primary thank-you-schedule-trigger" onClick={() => { setSchedulerOpen((open) => !open); setSchedulerStatus("idle"); }} aria-expanded={schedulerOpen} aria-controls="schedule-panel">Agendar una Reunion <span aria-hidden="true">↗</span></button>
-          <a href="https://wa.me/573127946952" target="_blank" rel="noreferrer" className="thank-you-link thank-you-link-uniform thank-you-link-whatsapp">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
-          <Link href="/" className="thank-you-link thank-you-link-uniform">Volver al inicio <span aria-hidden="true">↗</span></Link>
+          <button type="button" className="thank-you-link thank-you-link-primary thank-you-schedule-trigger" onClick={() => { setSchedulerOpen((open) => !open); setSchedulerStatus("idle"); }} aria-expanded={schedulerOpen} aria-controls="schedule-panel">Continuar con mi proyecto <span aria-hidden="true">↗</span></button>
+        </div>
+        <p className="thank-you-next-step">Completa un breve diagnóstico y agenda tu reunión de descubrimiento.</p>
+        <div className="thank-you-divider" />
+        <div className="thank-you-alternative">
+          <p>¿Prefieres hablar primero con nuestro equipo?</p>
+          <a href="https://wa.me/573127946952" target="_blank" rel="noreferrer">Contactar por WhatsApp <span aria-hidden="true">↗</span></a>
         </div>
         {schedulerOpen && (
           <section id="schedule-panel" className="thank-you-scheduler" aria-labelledby="schedule-title">
             {!contact ? (
               <div>
-                <p className="section-index">AGENDA UNA REUNION</p>
+                <p className="section-index">CONTINÚA CON TU PROYECTO</p>
                 <h2 id="schedule-title">Primero necesitamos tus datos de contacto.</h2>
                 <p>Completa el formulario de contacto y vuelve a esta pantalla para elegir fecha y hora.</p>
                 <Link href="/#contacto" className="thank-you-scheduler-submit">Ir al formulario <span aria-hidden="true">↗</span></Link>
@@ -117,17 +122,18 @@ export default function ThankYouExperience() {
               <form onSubmit={handleSchedule}>
                 <div className="thank-you-scheduler-head">
                   <div>
-                    <p className="section-index">AGENDA UNA REUNION</p>
-                    <h2 id="schedule-title">Elige un horario que te funcione.</h2>
+                    <p className="section-index">CONTINÚA CON TU PROYECTO</p>
+                    <h2 id="schedule-title">Cuéntanos un poco más y agenda la reunión.</h2>
                   </div>
                   <button type="button" className="thank-you-scheduler-close" onClick={() => setSchedulerOpen(false)} aria-label="Cerrar agenda">×</button>
                 </div>
-                <p className="thank-you-scheduler-copy">Usaremos los datos que acabas de compartirnos. Solo selecciona la fecha y hora que prefieras.</p>
+                <p className="thank-you-scheduler-copy">Usaremos los datos que acabas de compartirnos. Este breve diagnóstico nos ayuda a preparar una conversación útil.</p>
+                <label className="thank-you-scheduler-context">¿Qué quieres lograr o resolver?<textarea name="projectContext" rows={3} required /></label>
                 <div className="thank-you-scheduler-grid thank-you-scheduler-grid-compact">
                   <label>Fecha preferida<input name="meetingDate" type="date" min={new Date().toISOString().slice(0, 10)} required /></label>
                   <label>Hora preferida<input name="meetingTime" type="time" required /></label>
                 </div>
-                <button className="thank-you-scheduler-submit" type="submit" disabled={schedulerStatus === "submitting"}>{schedulerStatus === "submitting" ? "Enviando..." : "Solicitar reunion"} <span aria-hidden="true">↗</span></button>
+                <button className="thank-you-scheduler-submit" type="submit" disabled={schedulerStatus === "submitting"}>{schedulerStatus === "submitting" ? "Enviando..." : "Agendar reunión de descubrimiento"} <span aria-hidden="true">↗</span></button>
                 {schedulerStatus === "error" && <p className="thank-you-scheduler-error" role="alert">No pudimos enviar la solicitud. Intentalo de nuevo o contactanos por WhatsApp.</p>}
               </form>
             )}
