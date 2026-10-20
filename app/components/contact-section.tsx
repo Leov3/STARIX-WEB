@@ -129,6 +129,15 @@ export default function ContactSection() {
       });
 
       if (!response.ok) throw new Error("contact_submission_failed");
+      sessionStorage.setItem("starix-contact", JSON.stringify({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        countryCode: form.countryCode,
+        phone: form.phone.trim(),
+        company: form.company?.trim() || "",
+        interest: form.interest,
+        consent: form.consent,
+      }));
       router.push("/gracias");
     } catch {
       setSubmitError("No pudimos enviar tus datos. Inténtalo de nuevo o escríbenos por WhatsApp.");

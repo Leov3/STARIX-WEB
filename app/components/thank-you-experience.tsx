@@ -5,10 +5,30 @@ import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
 import { FormEvent, useRef, useState } from "react";
 
+type ContactDetails = {
+  name: string;
+  email: string;
+  countryCode: string;
+  phone: string;
+  company?: string;
+  interest: string;
+  consent: boolean;
+};
+
 export default function ThankYouExperience() {
   const pageRef = useRef<HTMLElement>(null);
   const [schedulerOpen, setSchedulerOpen] = useState(false);
   const [schedulerStatus, setSchedulerStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [contact] = useState<ContactDetails | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const savedContact = sessionStorage.getItem("starix-contact");
+      return savedContact ? JSON.parse(savedContact) as ContactDetails : null;
+    } catch {
+      sessionStorage.removeItem("starix-contact");
+      return null;
+    }
+  });
   const prefersReducedMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: pageRef,
@@ -24,6 +44,7 @@ export default function ThankYouExperience() {
 
   const handleSchedule = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!contact) return;
     const formData = new FormData(event.currentTarget);
     setSchedulerStatus("submitting");
 
@@ -32,13 +53,7 @@ export default function ThankYouExperience() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: formData.get("name"),
-          email: formData.get("email"),
-          phone: formData.get("phone"),
-          countryCode: "+57",
-          company: formData.get("company"),
-          interest: "unsure",
-          consent: formData.get("consent") === "on",
+          ...contact,
           page: window.location.pathname,
           meetingDate: formData.get("meetingDate"),
           meetingTime: formData.get("meetingTime"),
@@ -79,13 +94,20 @@ export default function ThankYouExperience() {
         <h1>Gracias por<br /><span>escribirnos.</span></h1>
         <p>Recibimos tu información. Revisaremos tu solicitud y te contactaremos pronto.</p>
         <div className="thank-you-actions">
-          <Link href="/" className="thank-you-link thank-you-link-primary">Volver al inicio <span aria-hidden="true">↗</span></Link>
-          <a href="https://wa.me/573127946952" target="_blank" rel="noreferrer" className="thank-you-link thank-you-link-whatsapp">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
-          <button type="button" className="thank-you-link thank-you-link-primary thank-you-schedule-trigger" onClick={() => { setSchedulerOpen((open) => !open); setSchedulerStatus("idle"); }} aria-expanded={schedulerOpen} aria-controls="schedule-panel">Agendar una Reunion <span aria-hidden="true">↗</span></button>
+          <button type="button" className="thank-you-link thank-you-link-uniform thank-you-schedule-trigger" onClick={() => { setSchedulerOpen((open) => !open); setSchedulerStatus("idle"); }} aria-expanded={schedulerOpen} aria-controls="schedule-panel">Agendar una Reunion <span aria-hidden="true">↗</span></button>
+          <a href="https://wa.me/573127946952" target="_blank" rel="noreferrer" className="thank-you-link thank-you-link-uniform">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
+          <Link href="/" className="thank-you-link thank-you-link-uniform">Volver al inicio <span aria-hidden="true">↗</span></Link>
         </div>
         {schedulerOpen && (
           <section id="schedule-panel" className="thank-you-scheduler" aria-labelledby="schedule-title">
-            {schedulerStatus === "success" ? (
+            {!contact ? (
+              <div>
+                <p className="section-index">AGENDA UNA REUNION</p>
+                <h2 id="schedule-title">Primero necesitamos tus datos de contacto.</h2>
+                <p>Completa el formulario de contacto y vuelve a esta pantalla para elegir fecha y hora.</p>
+                <Link href="/#contacto" className="thank-you-scheduler-submit">Ir al formulario <span aria-hidden="true">↗</span></Link>
+              </div>
+            ) : schedulerStatus === "success" ? (
               <div role="status">
                 <p className="section-index">SOLICITUD RECIBIDA</p>
                 <h2 id="schedule-title">Tu reunion esta en proceso de confirmacion.</h2>
@@ -100,15 +122,11 @@ export default function ThankYouExperience() {
                   </div>
                   <button type="button" className="thank-you-scheduler-close" onClick={() => setSchedulerOpen(false)} aria-label="Cerrar agenda">×</button>
                 </div>
-                <div className="thank-you-scheduler-grid">
-                  <label>Nombre<input name="name" type="text" autoComplete="name" required /></label>
-                  <label>Correo<input name="email" type="email" autoComplete="email" required /></label>
-                  <label>WhatsApp<input name="phone" type="tel" inputMode="tel" autoComplete="tel" required /></label>
-                  <label>Empresa <span>(opcional)</span><input name="company" type="text" autoComplete="organization" /></label>
+                <p className="thank-you-scheduler-copy">Usaremos los datos que acabas de compartirnos. Solo selecciona la fecha y hora que prefieras.</p>
+                <div className="thank-you-scheduler-grid thank-you-scheduler-grid-compact">
                   <label>Fecha preferida<input name="meetingDate" type="date" min={new Date().toISOString().slice(0, 10)} required /></label>
                   <label>Hora preferida<input name="meetingTime" type="time" required /></label>
                 </div>
-                <label className="thank-you-scheduler-consent"><input name="consent" type="checkbox" required />Acepto el tratamiento de mis datos para coordinar la reunion.</label>
                 <button className="thank-you-scheduler-submit" type="submit" disabled={schedulerStatus === "submitting"}>{schedulerStatus === "submitting" ? "Enviando..." : "Solicitar reunion"} <span aria-hidden="true">↗</span></button>
                 {schedulerStatus === "error" && <p className="thank-you-scheduler-error" role="alert">No pudimos enviar la solicitud. Intentalo de nuevo o contactanos por WhatsApp.</p>}
               </form>
