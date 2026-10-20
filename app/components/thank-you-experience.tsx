@@ -94,8 +94,8 @@ export default function ThankYouExperience() {
         <h1>Gracias por<br /><span>escribirnos.</span></h1>
         <p>Recibimos tu información. Revisaremos tu solicitud y te contactaremos pronto.</p>
         <div className="thank-you-actions">
-          <button type="button" className="thank-you-link thank-you-link-uniform thank-you-schedule-trigger" onClick={() => { setSchedulerOpen((open) => !open); setSchedulerStatus("idle"); }} aria-expanded={schedulerOpen} aria-controls="schedule-panel">Agendar una Reunion <span aria-hidden="true">↗</span></button>
-          <a href="https://wa.me/573127946952" target="_blank" rel="noreferrer" className="thank-you-link thank-you-link-uniform">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
+          <button type="button" className="thank-you-link thank-you-link-uniform thank-you-link-primary thank-you-schedule-trigger" onClick={() => { setSchedulerOpen((open) => !open); setSchedulerStatus("idle"); }} aria-expanded={schedulerOpen} aria-controls="schedule-panel">Agendar una Reunion <span aria-hidden="true">↗</span></button>
+          <a href="https://wa.me/573127946952" target="_blank" rel="noreferrer" className="thank-you-link thank-you-link-uniform thank-you-link-whatsapp">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
           <Link href="/" className="thank-you-link thank-you-link-uniform">Volver al inicio <span aria-hidden="true">↗</span></Link>
         </div>
         {schedulerOpen && (
