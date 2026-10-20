@@ -39,7 +39,7 @@ export default function ThankYouExperience() {
         <div className="thank-you-actions">
           <Link href="/" className="thank-you-link thank-you-link-primary">Volver al inicio <span aria-hidden="true">↗</span></Link>
           <a href="https://wa.me/573217211587" target="_blank" rel="noreferrer" className="thank-you-link thank-you-link-whatsapp">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
-          <span className="thank-you-link thank-you-link-gap" aria-disabled="true">Agendar una Reunion</span>
+          <a href="https://wa.me/573217211587?text=Hola%2C%20quiero%20agendar%20una%20reuni%C3%B3n%20con%20STARIX." target="_blank" rel="noreferrer" className="thank-you-link thank-you-link-primary">Agendar una Reunion <span aria-hidden="true">↗</span></a>
         </div>
       </section>
     </main>
