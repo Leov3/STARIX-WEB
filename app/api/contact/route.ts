@@ -32,14 +32,19 @@ export async function POST(request: Request) {
   const company = readText(data.company, 160);
   const interest = readText(data.interest, 64);
   const page = readText(data.page, 240) || "/";
+  const meetingDate = readText(data.meetingDate, 10);
+  const meetingTime = readText(data.meetingTime, 5);
+  const timezone = readText(data.timezone, 100);
   const consent = data.consent === true;
+  const hasMeetingRequest = Boolean(meetingDate || meetingTime);
 
   if (
     name.length < 2 ||
     !emailPattern.test(email) ||
     phone.length < 7 ||
     !allowedInterests.has(interest) ||
-    !consent
+    !consent ||
+    (hasMeetingRequest && (!/^\d{4}-\d{2}-\d{2}$/.test(meetingDate) || !/^\d{2}:\d{2}$/.test(meetingTime)))
   ) {
     return NextResponse.json({ ok: false, error: "invalid_fields" }, { status: 422 });
   }
@@ -60,6 +65,7 @@ export async function POST(request: Request) {
     consent,
     source: "starix_web",
     page,
+    meetingRequest: hasMeetingRequest ? { date: meetingDate, time: meetingTime, timezone } : undefined,
     submittedAt: new Date().toISOString(),
   };
 
