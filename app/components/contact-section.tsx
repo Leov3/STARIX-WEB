@@ -4,7 +4,6 @@ import Image from "next/image";
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import { GAP_SESSION_KEY, interestToBranch } from "@/app/lib/gap";
 
 const interests = [
   { value: "product_platform", label: "Crear un sitio web o producto digital" },
@@ -130,12 +129,6 @@ export default function ContactSection() {
       });
 
       if (!response.ok) throw new Error("contact_submission_failed");
-      const result = await response.json() as { gapToken?: string };
-      if (result.gapToken && form.interest) {
-        sessionStorage.setItem(GAP_SESSION_KEY, JSON.stringify({ token: result.gapToken, branch: interestToBranch[form.interest] }));
-      } else {
-        sessionStorage.removeItem(GAP_SESSION_KEY);
-      }
       router.push("/gracias");
     } catch {
       setSubmitError("No pudimos enviar tus datos. Inténtalo de nuevo o escríbenos por WhatsApp.");
