@@ -3,6 +3,7 @@ import { evaluateQualification, GAP_VERSION, isGapBranch, questionsForBranch, ty
 import { forwardGap, isRateLimited, tokenFromRequest, unavailable } from "@/app/lib/gap-server";
 
 export const runtime = "nodejs";
+const temporaryBookingUrl = "https://odoo.starix.tech/appointment/starix-videollamada";
 
 export async function POST(request: Request) {
   if (isRateLimited(request)) return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
@@ -21,6 +22,6 @@ export async function POST(request: Request) {
     if (!result) return unavailable();
     const qualificationStatus = result.qualificationStatus;
     if (qualificationStatus !== "HIGH_PRIORITY" && qualificationStatus !== "MEDIUM_PRIORITY" && qualificationStatus !== "MANUAL_REVIEW") return NextResponse.json({ ok: false, error: "invalid_upstream_response" }, { status: 502 });
-    return NextResponse.json({ ok: true, qualificationStatus, qualificationReason: result.qualificationReason || decision.qualificationReason, bookingUrl: typeof result.bookingUrl === "string" ? result.bookingUrl : undefined });
+    return NextResponse.json({ ok: true, qualificationStatus, qualificationReason: result.qualificationReason || decision.qualificationReason, bookingUrl: qualificationStatus === "HIGH_PRIORITY" || qualificationStatus === "MEDIUM_PRIORITY" ? (typeof result.bookingUrl === "string" ? result.bookingUrl : temporaryBookingUrl) : undefined });
   } catch { return NextResponse.json({ ok: false, error: "upstream_unavailable" }, { status: 502 }); }
 }
