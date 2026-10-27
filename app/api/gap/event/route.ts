@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { forwardGap, isRateLimited, tokenFromRequest, unavailable } from "@/app/lib/gap-server";
 
-const events = new Set(["thankyou_viewed", "gap_started", "gap_question_completed", "gap_completed", "gap_qualified", "gap_manual_review", "booking_started", "booking_completed"]);
+const events = new Set(["formulario_enviado", "pagina_gracias_vista", "diagnostico_iniciado", "diagnostico_completado", "agenda_mostrada", "videollamada_agendada", "whatsapp_desde_resultado", "abandono_diagnostico"]);
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {

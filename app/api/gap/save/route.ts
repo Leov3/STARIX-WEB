@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isGapBranch, questionsForBranch, validateGapAnswer } from "@/app/lib/gap";
+import { GAP_VERSION, isGapBranch, questionsForBranch, validateGapAnswer } from "@/app/lib/gap";
 import { forwardGap, isRateLimited, tokenFromRequest, unavailable } from "@/app/lib/gap-server";
 
 export const runtime = "nodejs";
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const question = questionsForBranch(branch).find((candidate) => candidate.id === questionId);
   if (!question || validateGapAnswer(question, answer)) return NextResponse.json({ ok: false, error: "invalid_answer" }, { status: 422 });
   try {
-    const result = await forwardGap("save_answer", { token, branch, questionId, answer: (answer as string).trim(), currentStep, questionnaireVersion: "starix-gap-v1" });
+    const result = await forwardGap("save_answer", { token, branch, questionId, answer: (answer as string).trim(), currentStep, questionnaireVersion: GAP_VERSION });
     if (!result) return unavailable();
     return NextResponse.json({ ok: true, savedAt: result.updatedAt || new Date().toISOString() });
   } catch { return NextResponse.json({ ok: false, error: "upstream_unavailable" }, { status: 502 }); }

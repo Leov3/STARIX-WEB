@@ -4,6 +4,7 @@ import Image from "next/image";
 import { FormEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { GAP_SESSION_KEY, interestToBranch, type GapBranch } from "@/app/lib/gap";
 
 const interests = [
   { value: "product_platform", label: "Crear un sitio web o producto digital" },
@@ -34,6 +35,13 @@ type LeadFormData = {
   consent: boolean;
 };
 type FormErrors = Partial<Record<keyof LeadFormData, string>>;
+type ContactResponse = {
+  leadId?: string;
+  gapToken?: string;
+  token?: string;
+  branch?: GapBranch;
+  name?: string;
+};
 
 const initialForm: LeadFormData = {
   name: "",
@@ -101,7 +109,7 @@ export default function ContactSection() {
     if (!data.phone.trim()) nextErrors.phone = "Necesitamos tu número para continuar.";
     else if (!phonePattern.test(data.phone.trim()) || data.phone.replace(/\D/g, "").length < 7) nextErrors.phone = "Introduce un número válido.";
     if (!data.interest) nextErrors.interest = "Selecciona qué quieres mejorar.";
-    if (!data.consent) nextErrors.consent = "Debes aceptar los términos y condiciones para continuar.";
+    if (!data.consent) nextErrors.consent = "Debes autorizar el tratamiento de tus datos para continuar.";
     return nextErrors;
   };
 
@@ -129,6 +137,16 @@ export default function ContactSection() {
       });
 
       if (!response.ok) throw new Error("contact_submission_failed");
+      const payload = await response.json() as ContactResponse;
+      const token = payload.gapToken ?? payload.token;
+      const branch = payload.branch ?? interestToBranch[form.interest as Interest];
+      if (!token || !branch) throw new Error("contact_session_missing");
+      sessionStorage.setItem(GAP_SESSION_KEY, JSON.stringify({
+        token,
+        branch,
+        name: payload.name?.trim() || form.name.trim(),
+        leadId: payload.leadId,
+      }));
       router.push("/gracias");
     } catch {
       setSubmitError("No pudimos enviar tus datos. Inténtalo de nuevo o escríbenos por WhatsApp.");
@@ -233,7 +251,7 @@ export default function ContactSection() {
                 <div className="contact-submit-group">
                   <div className={errors.consent ? "contact-consent has-error" : "contact-consent"}>
                     <input id="contact-consent" name="consent" type="checkbox" checked={form.consent} onChange={(event) => updateField("consent", event.target.checked)} aria-invalid={Boolean(errors.consent)} aria-describedby={errors.consent ? "contact-consent-error" : undefined} />
-                    <label htmlFor="contact-consent">Acepto los términos y condiciones del servicio y el tratamiento de mis datos.</label>
+                    <label htmlFor="contact-consent">Autorizo a STARIX a registrar o actualizar mis datos en Odoo, dar seguimiento comercial y gestionar reservas y actividades relacionadas, conforme a la <a href="/privacidad" target="_blank" rel="noreferrer">Política de tratamiento de datos</a>.</label>
                   </div>
                   {errors.consent && <p id="contact-consent-error" className="contact-error" role="alert">{errors.consent}</p>}
                   <button className="contact-submit" type="submit" disabled={submitState === "submitting"}>

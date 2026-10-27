@@ -71,6 +71,8 @@ export async function POST(request: Request) {
     company,
     interest,
     consent,
+    consentVersion: "starix-privacy-draft-0.1",
+    consentedAt: consent ? new Date().toISOString() : undefined,
     source: "starix_web",
     page,
     meetingRequest: hasMeetingRequest ? { date: meetingDate, time: meetingTime, timezone, projectContext } : undefined,

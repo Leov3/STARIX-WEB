@@ -14,6 +14,6 @@ export async function POST(request: Request) {
     const result = await forwardGap("session", { token });
     if (!result) return unavailable();
     if (!isGapBranch(result.branch) || !result.answers || typeof result.answers !== "object") return NextResponse.json({ ok: false, error: "invalid_upstream_response" }, { status: 502 });
-    return NextResponse.json({ ok: true, branch: result.branch, answers: result.answers, currentStep: Number(result.currentStep) || 0, status: result.status, qualificationStatus: result.qualificationStatus });
+    return NextResponse.json({ ok: true, branch: result.branch, answers: result.answers, currentStep: Number(result.currentStep) || 0, status: result.status, qualificationStatus: result.qualificationStatus, bookingUrl: typeof result.bookingUrl === "string" ? result.bookingUrl : undefined });
   } catch { return NextResponse.json({ ok: false, error: "upstream_unavailable" }, { status: 502 }); }
 }

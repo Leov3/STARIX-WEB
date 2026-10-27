@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
-import GapExperience from "@/app/components/gap-experience";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Diagnóstico | STARIX",
-  description: "Diagnóstico inicial para preparar tu proyecto con STARIX.",
-};
-
-export default function GapPage() {
-  return <GapExperience />;
+export default function LegacyGapPage() {
+  redirect("/diagnostico");
 }
