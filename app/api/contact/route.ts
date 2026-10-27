@@ -88,24 +88,23 @@ export async function POST(request: Request) {
       signal: AbortSignal.timeout(12_000),
     });
 
-    let upstream: unknown;
-    try {
-      upstream = await response.json();
-    } catch {
-      return NextResponse.json(
-        { ok: false, error: response.ok ? "invalid_upstream_response" : "upstream_error" },
-        { status: response.ok ? 502 : response.status },
-      );
-    }
-
     if (!response.ok) {
       return NextResponse.json({ ok: false, error: "upstream_error" }, { status: response.status });
     }
-    if (!upstream || typeof upstream !== "object" || Array.isArray(upstream)) {
-      return NextResponse.json({ ok: false, error: "invalid_upstream_response" }, { status: 502 });
+
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      try {
+        const upstream: unknown = await response.json();
+        if (upstream && typeof upstream === "object" && !Array.isArray(upstream)) {
+          return NextResponse.json(upstream, { status: response.status });
+        }
+      } catch {
+        // A successful webhook may intentionally return an empty response body.
+      }
     }
 
-    return NextResponse.json(upstream, { status: response.status });
+    return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false, error: "upstream_unavailable" }, { status: 502 });
   }
