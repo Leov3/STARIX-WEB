@@ -3,6 +3,15 @@ import { isGapBranch } from "@/app/lib/gap";
 import { forwardGap, isRateLimited, tokenFromRequest, unavailable } from "@/app/lib/gap-server";
 
 export const runtime = "nodejs";
+const bookingOrigin = "https://odoo.starix.tech";
+
+function bookingUrlFrom(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  try {
+    const url = new URL(value, bookingOrigin);
+    return url.origin === bookingOrigin && url.pathname.startsWith("/my/bookings/") && url.searchParams.has("access_token") ? url.toString() : undefined;
+  } catch { return undefined; }
+}
 
 export async function POST(request: Request) {
   if (isRateLimited(request)) return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
@@ -14,6 +23,6 @@ export async function POST(request: Request) {
     const result = await forwardGap("session", { token });
     if (!result) return unavailable();
     if (!isGapBranch(result.branch) || !result.answers || typeof result.answers !== "object") return NextResponse.json({ ok: false, error: "invalid_upstream_response" }, { status: 502 });
-    return NextResponse.json({ ok: true, branch: result.branch, answers: result.answers, currentStep: Number(result.currentStep) || 0, status: result.status, qualificationStatus: result.qualificationStatus, bookingUrl: typeof result.bookingUrl === "string" ? result.bookingUrl : undefined });
+    return NextResponse.json({ ok: true, branch: result.branch, answers: result.answers, currentStep: Number(result.currentStep) || 0, status: result.status, qualificationStatus: result.qualificationStatus, bookingUrl: bookingUrlFrom(result.bookingUrl) });
   } catch { return NextResponse.json({ ok: false, error: "upstream_unavailable" }, { status: 502 }); }
 }

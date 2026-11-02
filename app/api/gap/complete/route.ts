@@ -3,7 +3,15 @@ import { evaluateQualification, GAP_VERSION, isGapBranch, questionsForBranch, ty
 import { forwardGap, isRateLimited, tokenFromRequest, unavailable } from "@/app/lib/gap-server";
 
 export const runtime = "nodejs";
-const temporaryBookingUrl = "https://odoo.starix.tech/appointment/starix-videollamada";
+const bookingOrigin = "https://odoo.starix.tech";
+
+function bookingUrlFrom(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const url = new URL(value, bookingOrigin);
+    return url.origin === bookingOrigin && url.pathname.startsWith("/my/bookings/") && url.searchParams.has("access_token") ? url.toString() : null;
+  } catch { return null; }
+}
 
 export async function POST(request: Request) {
   if (isRateLimited(request)) return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
@@ -22,6 +30,8 @@ export async function POST(request: Request) {
     if (!result) return unavailable();
     const qualificationStatus = result.qualificationStatus;
     if (qualificationStatus !== "HIGH_PRIORITY" && qualificationStatus !== "MEDIUM_PRIORITY" && qualificationStatus !== "MANUAL_REVIEW") return NextResponse.json({ ok: false, error: "invalid_upstream_response" }, { status: 502 });
-    return NextResponse.json({ ok: true, qualificationStatus, qualificationReason: result.qualificationReason || decision.qualificationReason, bookingUrl: qualificationStatus === "HIGH_PRIORITY" || qualificationStatus === "MEDIUM_PRIORITY" ? (typeof result.bookingUrl === "string" ? result.bookingUrl : temporaryBookingUrl) : undefined });
+    const bookingUrl = bookingUrlFrom(result.bookingUrl);
+    if ((qualificationStatus === "HIGH_PRIORITY" || qualificationStatus === "MEDIUM_PRIORITY") && !bookingUrl) return NextResponse.json({ ok: false, error: "booking_unavailable" }, { status: 502 });
+    return NextResponse.json({ ok: true, qualificationStatus, qualificationReason: result.qualificationReason || decision.qualificationReason, bookingUrl: bookingUrl || undefined });
   } catch { return NextResponse.json({ ok: false, error: "upstream_unavailable" }, { status: 502 }); }
 }
