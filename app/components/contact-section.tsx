@@ -147,6 +147,11 @@ export default function ContactSection() {
         name: payload.name?.trim() || form.name.trim(),
         leadId: payload.leadId,
       }));
+      void fetch("/api/gap/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-starix-gap-token": token },
+        body: JSON.stringify({ event: "formulario_enviado" }),
+      });
       router.push("/gracias");
     } catch {
       setSubmitError("No pudimos enviar tus datos. Inténtalo de nuevo o escríbenos por WhatsApp.");
