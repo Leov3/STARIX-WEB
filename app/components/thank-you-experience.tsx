@@ -14,14 +14,29 @@ export default function ThankYouExperience() {
   const prefersReducedMotion = useReducedMotion();
   const [name, setName] = useState("");
   const [preview, setPreview] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { scrollYProgress } = useScroll({ target: pageRef, offset: ["start start", "end start"] });
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.55 });
-  const earthY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [160, 160] : [160, 20]);
+  const earthY = useTransform(
+    smoothProgress,
+    [0, 1],
+    prefersReducedMotion
+      ? [isMobile ? 20 : 160, isMobile ? 20 : 160]
+      : [isMobile ? 20 : 160, isMobile ? -80 : 20],
+  );
   const earthScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [1, 1.14]);
   const starsY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [0, 28]);
   const starsScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [1, 1.04]);
   const astronautY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [0, -72]);
   const astronautScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [1, 1.035]);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 620px)");
+    const updateMobile = () => setIsMobile(mobileQuery.matches);
+    updateMobile();
+    mobileQuery.addEventListener("change", updateMobile);
+    return () => mobileQuery.removeEventListener("change", updateMobile);
+  }, []);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("preview") === "1") {
@@ -44,8 +59,8 @@ export default function ThankYouExperience() {
   }, []);
 
   return (
-    <main ref={pageRef} className="thank-you-page">
-      <div className="thank-you-scene" aria-hidden="true">
+    <main ref={pageRef} className="hero thank-you-page">
+      <div className="hero-scene thank-you-scene" aria-hidden="true">
         <motion.div className="hero-stars" style={{ y: starsY, scale: starsScale }} />
         <motion.div className="hero-earth" style={{ y: earthY, scale: earthScale }} />
         <motion.div className="hero-astronaut" style={{ y: astronautY, scale: astronautScale }} animate={prefersReducedMotion ? undefined : { x: [0, 8, 0, -6, 0], rotate: [0, .45, 0, -.3, 0] }} transition={{ duration: 20, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" }} />
