@@ -67,21 +67,22 @@ export default function ThankYouExperience() {
       </div>
       <section className="thank-you-content">
         {preview && <p className="preview-flag">VISTA PREVIA · DATOS FICTICIOS</p>}
-        <p className="section-index">CONTACTO RECIBIDO</p>
-        <p className="thank-you-step">PASO 1 COMPLETADO · SIGUIENTE: TU DIAGNÓSTICO</p>
-        <Image className="thank-you-mark" src="/brand/starix-mark.png" alt="" width={294} height={295} sizes="(max-width: 620px) 72px, 112px" priority />
-        <h1>Gracias por dar el primer paso{name ? `, ${name}` : ""}.</h1>
-        <p>Ya recibimos tu información. Ahora queremos entender mejor tu contexto para preparar una conversación que aporte a tu proyecto.</p>
-        <p>Continúa con tu diagnóstico. En pocos minutos podremos identificar dónde estás hoy, qué quieres mejorar y cuáles pueden ser tus próximos pasos.</p>
-        <div className="thank-you-actions">
+        <div className="thank-you-intro">
+          <Image className="thank-you-mark" src="/brand/starix-mark.png" alt="" width={294} height={295} sizes="52px" priority />
+          <p className="section-index">CONTACTO RECIBIDO</p>
+        </div>
+        <h1>Gracias{name ? <span>, {name}</span> : " por dar el primer paso"}.</h1>
+        <p className="thank-you-lead">Ya recibimos tu información. Queremos conocer mejor tu proyecto para preparar una conversación útil para ti.</p>
+        <div className="thank-you-next">
+          <p className="thank-you-step">SIGUIENTE PASO · TU DIAGNÓSTICO</p>
+          <p>Responde seis preguntas sobre lo que quieres lograr. Te tomará solo unos minutos.</p>
           <Link href={preview ? "/diagnostico?preview=1" : "/diagnostico"} className="thank-you-link thank-you-link-primary">Iniciar mi diagnóstico <span aria-hidden="true">↗</span></Link>
         </div>
-        <div className="thank-you-divider" />
         <div className="thank-you-alternative">
-          <p>¿Prefieres una respuesta rápida?</p>
-          {preview ? <span className="preview-static-link">Hablar por WhatsApp <span aria-hidden="true">↗</span></span> : <a href={whatsappUrl} target="_blank" rel="noreferrer">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>}
+          <span>¿Prefieres conversar ahora?</span>
+          {preview ? <span className="preview-static-link">Hablar por WhatsApp ↗</span> : <a href={whatsappUrl} target="_blank" rel="noreferrer">Hablar por WhatsApp ↗</a>}
         </div>
-        <p className="thank-you-next-step">Tu información será tratada de forma confidencial y solo se usará para dar seguimiento a tu solicitud.</p>
+        <p className="thank-you-privacy">Usaremos tus datos solo para dar seguimiento a tu solicitud.</p>
       </section>
     </main>
   );
