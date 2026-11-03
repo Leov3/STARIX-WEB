@@ -65,6 +65,43 @@ def _scheduled_at(booking):
 
 
 class StarixAgendaApi(http.Controller):
+    @http.route(
+        "/starix/api/agenda/session",
+        auth="public", type="http", methods=["POST"], csrf=False,
+    )
+    def session(self, **kwargs):
+        body = _body()
+        if body is None:
+            return _json({"ok": False, "error": "invalid_json"}, 400)
+        secret = request.env["ir.config_parameter"].sudo().get_str(
+            "starix.booking_callback_secret"
+        )
+        supplied = request.httprequest.headers.get("x-starix-booking-secret", "")
+        if not secret or not compare_digest(secret, supplied):
+            return _json({"ok": False, "error": "unauthorized"}, 401)
+        token = body.get("token")
+        if not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9_-]{32,512}", token):
+            return _json({"ok": False, "error": "invalid_token"}, 401)
+        leads = request.env["crm.lead"].sudo().search(
+            [("x_gap_token", "=", token)], limit=2
+        )
+        if len(leads) != 1 or leads.x_gap_qualification not in (
+            "HIGH_PRIORITY", "MEDIUM_PRIORITY"
+        ):
+            return _json({"ok": False, "error": "booking_unavailable"}, 409)
+        booking_id = str(leads.x_gap_booking_id or "")
+        if not booking_id.isdigit():
+            return _json({"ok": False, "error": "booking_unavailable"}, 409)
+        booking = request.env["resource.booking"].sudo().browse(int(booking_id)).exists()
+        if not booking or not booking.active or booking.state not in ("pending", "confirmed"):
+            return _json({"ok": False, "error": "booking_unavailable"}, 409)
+        if not booking.access_token:
+            return _json({"ok": False, "error": "booking_unavailable"}, 409)
+        return _json({
+            "ok": True, "bookingId": booking.id,
+            "accessToken": booking.access_token,
+        })
+
     def _authorized_booking(self, booking_id, body):
         secret = request.env["ir.config_parameter"].sudo().get_str(
             "starix.booking_callback_secret"

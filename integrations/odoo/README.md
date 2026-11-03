@@ -4,8 +4,8 @@
 controladores `controllers/agenda.py` exponen disponibilidad y confirmación para
 la agenda de STARIX sin enviar el enlace de acceso de Odoo al navegador.
 
-- El servidor STARIX valida el token del Diagnóstico con n8n y obtiene el enlace
-  de reserva internamente.
+- El servidor STARIX consulta el lead en Odoo por el token del Diagnóstico y
+  obtiene la reserva ya vinculada, sin volver a ejecutar el flujo de n8n.
 - Odoo exige el token de esa reserva y el secreto compartido
   `starix.booking_callback_secret`, que corresponde a `BOOKING_WEBHOOK_SECRET`
   en STARIX.

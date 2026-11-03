@@ -1,5 +1,3 @@
-import { forwardGap } from "@/app/lib/gap-server";
-
 const ODOO_ORIGIN = "https://odoo.starix.tech";
 
 export type BookingRef = { id: string; accessToken: string };
@@ -14,18 +12,20 @@ export type AgendaResponse = {
 };
 
 export async function bookingForSession(token: string): Promise<BookingRef | null> {
-  const session = await forwardGap("session", { token });
-  if (!session || (session.qualificationStatus !== "HIGH_PRIORITY" && session.qualificationStatus !== "MEDIUM_PRIORITY")) return null;
-  if (typeof session.bookingUrl !== "string") return null;
-  try {
-    const url = new URL(session.bookingUrl, ODOO_ORIGIN);
-    const match = /^\/my\/bookings\/(\d+)\/schedule(?:\/\d{4}\/\d{1,2})?\/?$/.exec(url.pathname);
-    const accessToken = url.searchParams.get("access_token");
-    if (url.origin !== ODOO_ORIGIN || !match || !accessToken) return null;
-    return { id: match[1], accessToken };
-  } catch {
-    return null;
-  }
+  const secret = process.env.BOOKING_WEBHOOK_SECRET;
+  if (!secret) throw new Error("booking_secret_missing");
+  const response = await fetch(`${ODOO_ORIGIN}/starix/api/agenda/session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-starix-booking-secret": secret },
+    body: JSON.stringify({ token }),
+    cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (response.status === 409 || response.status === 401) return null;
+  if (!response.ok) throw new Error("booking_lookup_failed");
+  const data = await response.json() as { ok?: boolean; bookingId?: number; accessToken?: string };
+  if (!data.ok || !Number.isSafeInteger(data.bookingId) || !data.accessToken) return null;
+  return { id: String(data.bookingId), accessToken: data.accessToken };
 }
 
 export async function askOdoo(ref: BookingRef, action: "slots" | "confirm", payload: Record<string, string>): Promise<{ status: number; data: AgendaResponse }> {
