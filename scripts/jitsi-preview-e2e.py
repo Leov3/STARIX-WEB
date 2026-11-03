@@ -21,6 +21,7 @@ booking_secret = command("docker", "exec", web, "printenv", "BOOKING_WEBHOOK_SEC
 jitsi_secret = Path("/opt/jitsi-starix-stage/.jwt-secret").read_text().strip()
 booking_id = int(os.environ["JITSI_TEST_BOOKING_ID"])
 user_id = int(os.environ["JITSI_TEST_USER_ID"])
+lead_id = int(os.environ["JITSI_TEST_LEAD_ID"])
 
 env_file = Path("/root/starix-backups/jitsi-web-preview.env")
 env_file.write_text(
@@ -49,6 +50,14 @@ def request(path, payload, cookie=None):
     req = Request("http://127.0.0.1:3102" + path, data=json.dumps(payload).encode(), headers=headers, method="POST")
     try:
         with urlopen(req, timeout=20) as response:
+            return response.status, json.load(response)
+    except HTTPError as error:
+        return error.code, json.load(error)
+
+def agenda_request(path, payload, gap_token):
+    req = Request("http://127.0.0.1:3102" + path, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json", "x-starix-gap-token": gap_token}, method="POST")
+    try:
+        with urlopen(req, timeout=30) as response:
             return response.status, json.load(response)
     except HTTPError as error:
         return error.code, json.load(error)
@@ -82,4 +91,12 @@ assert staff_claims["room"] == client["room"]
 assert staff_claims["context"]["user"]["affiliation"] == "owner"
 assert staff_claims["context"]["user"]["moderator"] is True
 
-print(json.dumps({"client": "ok", "tampered_client": "denied", "staff": "ok", "same_room": True, "client_moderator": False, "staff_moderator": True}))
+gap_token = command("docker", "exec", db, "psql", "-U", "odoo", "-d", "starix", "-Atc", f"select x_gap_token from crm_lead where id={lead_id}")
+month = time.strftime("%Y-%m", time.gmtime())
+status, agenda = agenda_request("/api/agenda/slots", {"month": month}, gap_token)
+assert status == 200 and agenda.get("status") == "confirmed", (status, agenda.get("error"))
+assert agenda.get("meetingUrl", "").endswith(client_code)
+status, confirmed = agenda_request("/api/agenda/confirm", {"when": agenda["scheduledAt"]}, gap_token)
+assert status == 200 and confirmed.get("meetingUrl", "").endswith(client_code)
+
+print(json.dumps({"client": "ok", "tampered_client": "denied", "staff": "ok", "same_room": True, "client_moderator": False, "staff_moderator": True, "agenda_link": "ok", "confirmed_link": "ok"}))

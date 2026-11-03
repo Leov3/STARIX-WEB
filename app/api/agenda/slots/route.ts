@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { askOdoo, bookingForSession } from "@/app/lib/agenda-server";
 import { isRateLimited, tokenFromRequest } from "@/app/lib/gap-server";
+import { clientMeetingUrl } from "@/app/lib/jitsi-server";
 
 export const runtime = "nodejs";
 
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
       durationMinutes: result.data.durationMinutes,
       slots: result.data.slots || [],
       scheduledAt: result.data.scheduledAt,
+      meetingUrl: result.data.status === "confirmed" ? clientMeetingUrl(booking) : undefined,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch { return NextResponse.json({ ok: false, error: "agenda_unavailable" }, { status: 502 }); }
 }

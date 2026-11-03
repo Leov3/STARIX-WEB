@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { askOdoo, bookingForSession } from "@/app/lib/agenda-server";
 import { isRateLimited, tokenFromRequest } from "@/app/lib/gap-server";
+import { clientMeetingUrl } from "@/app/lib/jitsi-server";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true, status: result.data.status, contactName: booking.contactName,
       scheduledAt: result.data.scheduledAt,
+      meetingUrl: clientMeetingUrl(booking),
       durationMinutes: result.data.durationMinutes,
       timezone: "America/Bogota",
     }, { headers: { "Cache-Control": "no-store" } });

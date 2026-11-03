@@ -6,7 +6,7 @@ import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "mo
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GAP_SESSION_KEY } from "@/app/lib/gap";
 
-type AgendaPayload = { ok: boolean; error?: string; status?: "pending" | "confirmed"; slots?: string[]; scheduledAt?: string; durationMinutes?: number; contactName?: string };
+type AgendaPayload = { ok: boolean; error?: string; status?: "pending" | "confirmed"; slots?: string[]; scheduledAt?: string; durationMinutes?: number; contactName?: string; meetingUrl?: string };
 type View = "loading" | "ready" | "missing" | "error" | "confirmed";
 const timeZone = "America/Bogota";
 const dateFormatter = new Intl.DateTimeFormat("es-CO", { timeZone, weekday: "long", day: "numeric", month: "long" });
@@ -58,6 +58,8 @@ export default function AgendaExperience() {
   const [selectedSlot, setSelectedSlot] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [contactName, setContactName] = useState("");
+  const [meetingUrl, setMeetingUrl] = useState("");
+  const [copied, setCopied] = useState(false);
   const [view, setView] = useState<View>("loading");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -113,7 +115,7 @@ export default function AgendaExperience() {
         const result = await response.json() as AgendaPayload;
         if (!response.ok || !result.ok) throw new Error(result.error || "agenda_unavailable");
         setContactName(result.contactName || "");
-        if (result.status === "confirmed" && result.scheduledAt) { setScheduledAt(result.scheduledAt); setView("confirmed"); return; }
+        if (result.status === "confirmed" && result.scheduledAt) { setScheduledAt(result.scheduledAt); setMeetingUrl(result.meetingUrl || ""); setView("confirmed"); return; }
         const next = Array.isArray(result.slots) ? result.slots : [];
         setSlots(next);
         setSelectedDay(next.length ? dateKey(new Date(next[0])) : "");
@@ -135,7 +137,7 @@ export default function AgendaExperience() {
 
   const confirm = async () => {
     if (!selectedSlot || busy) return;
-    if (preview) { setScheduledAt(selectedSlot); setView("confirmed"); return; }
+    if (preview) { setScheduledAt(selectedSlot); setMeetingUrl("/reunion?preview=1"); setView("confirmed"); return; }
     setBusy(true); setMessage("");
     try {
       const response = await fetch("/api/agenda/confirm", {
@@ -152,6 +154,7 @@ export default function AgendaExperience() {
         return;
       }
       setScheduledAt(result.scheduledAt);
+      setMeetingUrl(result.meetingUrl || "");
       if (result.contactName) setContactName(result.contactName);
       setView("confirmed");
     } catch { setMessage("No pudimos confirmar la reserva. Revisa tu conexión e inténtalo de nuevo."); }
@@ -174,6 +177,7 @@ export default function AgendaExperience() {
           <h1>Nos vemos pronto{contactName ? <>, <span className="agenda-name">{contactName}.</span></> : "."}</h1>
           <p>{preview ? "Esta es una confirmación de vista previa; no se creó ninguna reserva." : "Tu videollamada quedó agendada. Revisaremos tu diagnóstico antes de conversar para aprovechar mejor el tiempo."}</p>
           <div className="agenda-confirmed-date">{scheduledAt && `${labelDate(scheduledAt)} · ${labelTime(scheduledAt)}`}<span>30 minutos · hora de Colombia</span></div>
+          {meetingUrl && <div className="agenda-meeting-link"><p>Este es tu acceso privado a la videollamada. Guárdalo para el día de la cita; esperarás a que un colaborador de STARIX te admita.</p><div><Link href={meetingUrl} className="gap-submit">Abrir videollamada ↗</Link><button type="button" className="gap-previous" onClick={async () => { try { await navigator.clipboard.writeText(new URL(meetingUrl, window.location.origin).href); setCopied(true); } catch { setCopied(false); } }}>{copied ? "Enlace copiado" : "Copiar enlace"}</button></div></div>}
           <Link href="/" className="gap-submit">Volver a STARIX ↗</Link>
         </div>
           : <div className="agenda-state"><p className="agenda-kicker">SIGUIENTE PASO · VIDEOLLAMADA</p><h1>Elige un momento para conversar.</h1><p>Una conversación de 30 minutos para revisar tu diagnóstico y definir los próximos pasos.</p><div className="agenda-summary"><span>30 minutos</span><span>Videollamada</span><span>Hora de Colombia</span></div>
