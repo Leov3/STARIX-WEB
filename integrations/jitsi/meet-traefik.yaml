@@ -1,0 +1,25 @@
+http:
+  routers:
+    starix-jitsi-http:
+      entryPoints:
+        - http
+      rule: "Host(`meet.starix.tech`)"
+      priority: 100
+      middlewares:
+        - redirect-to-https
+      service: starix-jitsi-web
+    starix-jitsi-https:
+      entryPoints:
+        - https
+      rule: "Host(`meet.starix.tech`)"
+      priority: 100
+      service: starix-jitsi-web
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: meet.starix.tech
+  services:
+    starix-jitsi-web:
+      loadBalancer:
+        servers:
+          - url: "http://desarrollo_jitsi_undefined:80"
