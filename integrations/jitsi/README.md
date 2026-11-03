@@ -11,3 +11,9 @@ reinicio. Apunta al nombre del contenedor web de esta instalación,
 `desarrollo_jitsi_undefined`, en la red `easypanel`.
 
 Comprobar `https://meet.starix.tech/`, `/config.js` y `/http-bind` tras cambios.
+
+El ensayo aislado se prepara en `/opt/jitsi-starix-stage` con `prepare-stage.py`:
+ejecutar el script en el servidor y después `docker compose -p starix-jitsi-stage
+up -d` desde ese directorio. Su web escucha solo en `127.0.0.1:18443` y usa un
+certificado local. Para comprobar audio y video, ejecutar `scripts/jitsi-smoke.cjs`
+en el contenedor de Playwright con dos dispositivos simulados.
