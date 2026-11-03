@@ -20,3 +20,15 @@
 - Resultado: interfaz validada en el contenedor web de ensayo; Jitsi y web públicos conservan su versión anterior hasta el lanzamiento de la fase 4.
 - Reversión: retirar los archivos `custom-config.js` y `custom-interface_config.js` del ensayo y recrear solo su contenedor `web`; los cambios web aún no se publicaron.
 - Pendiente para fase 3: acceso temporal vinculado a reservas, autenticación de colaboradores activos en Odoo y prueba de moderación y espera.
+
+## Fase 3 — Identidades y permisos · 2026-11-03 · Completada en ensayo
+
+- Commit de implementación: `85fcf46`.
+- Respaldo previo de Odoo: `/root/starix-backups/odoo-before-jitsi-20261103.dump` (SHA-256 `5076073071e207e72444761e6d73d26271fcc96ad137a602fc489bff28f45c44`) y `/root/starix-backups/starix-booking-callback-before-jitsi-20261103.tar.gz` (SHA-256 `9d721bd313a69218275e0b159872f77db68d882a5f2c9993a5f6cddc86a46314`), ambos con permisos `600`.
+- Se amplió el módulo Odoo para emitir un acceso corto solo a usuarios internos activos y mostrar “Entrar a videollamada STARIX” en la oportunidad con reserva. El módulo `20.0.1.3.0` se actualizó y reinició en producción; la web pública aún no emite enlaces de reunión.
+- El cliente recibe un código opaco derivado de la reserva; Odoo valida la reserva confirmada y caducidad. Next emite JWT distintos: `member` para cliente y `owner` para colaborador. El secreto de prueba reside solo en el servidor.
+- El Jitsi de ensayo usa una sala de espera automática. Su versión del módulo de lobby esperaba `create-lobby-room`, mientras el módulo contrib emitía un nombre antiguo; `mod_starix_lobby.lua` resuelve la incompatibilidad.
+- Pruebas: ambos órdenes de llegada; cliente en espera, colaborador admite, segundo cliente solo visible en controles del colaborador. `scripts/jitsi-roles-smoke.cjs` pasó. En el frontend integrado, `scripts/jitsi-wrapper-smoke.cjs` confirmó entrada, espera y admisión sin errores de página. `scripts/jitsi-preview-e2e.py` confirmó código válido, rechazo de código alterado, misma sala y roles correctos; también probó el intercambio del ticket interno por cookie de sesión.
+- Límite: la reserva sintética usada para la prueba no generó invitación de calendario ni correo; se creó solo para validar acceso. Se retirará al cerrar la fase 4.
+- Reversión: restaurar el respaldo del addon Odoo y actualizarlo, retirar el módulo de lobby del ensayo; la web pública y el Jitsi público aún conservan su configuración previa.
+- Pendiente para fase 4: mostrar el enlace al confirmar una reserva real, publicar la web y Jitsi con secretos de producción, verificar el recorrido y limpiar la reserva sintética.
