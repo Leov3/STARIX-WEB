@@ -8,7 +8,7 @@ const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url
 function token(room, name, moderator) {
   const now = Math.floor(Date.now() / 1000);
   const input = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({
-    aud: 'jitsi', iss: 'starix-stage', sub: 'meet.jitsi', room,
+    aud: 'jitsi', iss: process.env.JWT_APP_ID || 'starix-stage', sub: 'meet.jitsi', room,
     iat: now, nbf: now - 5, exp: now + 1800,
     context: { user: { name, affiliation: moderator ? 'owner' : 'member', moderator, lobby: !moderator, lobby_bypass: moderator } },
   })}`;

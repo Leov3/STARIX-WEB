@@ -65,7 +65,7 @@ class StarixMeeting(http.Controller):
         booking = request.env["resource.booking"].sudo().browse(booking_id).exists()
         lead = request.env["crm.lead"].sudo().search([("x_gap_booking_id", "=", str(booking_id))], limit=1)
         secret = _secret()
-        if not _is_internal(user) or not secret or not booking or not lead or booking.state != "confirmed" or not booking.active:
+        if not _is_internal(user) or not secret or not booking or not lead or booking.state not in ("scheduled", "confirmed") or not booking.active:
             return request.not_found()
         ticket = _ticket(secret, booking.id, user.id)
         response = redirect("https://starix.tech/api/jitsi/staff-entry?ticket=" + ticket, code=303)
@@ -114,7 +114,7 @@ class StarixMeeting(http.Controller):
             return _json({"ok": False, "error": "invalid_access"}, 401)
 
         lead = request.env["crm.lead"].sudo().search([("x_gap_booking_id", "=", str(booking.id))], limit=1) if booking else None
-        if not booking or not lead or not booking.active or booking.state != "confirmed" or not booking.start:
+        if not booking or not lead or not booking.active or booking.state not in ("scheduled", "confirmed") or not booking.start:
             return _json({"ok": False, "error": "meeting_unavailable"}, 409)
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         if now > booking.start + timedelta(hours=booking.duration + 1):

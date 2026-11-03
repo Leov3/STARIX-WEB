@@ -93,7 +93,7 @@ class StarixAgendaApi(http.Controller):
         if not booking_id.isdigit():
             return _json({"ok": False, "error": "booking_unavailable"}, 409)
         booking = request.env["resource.booking"].sudo().browse(int(booking_id)).exists()
-        if not booking or not booking.active or booking.state not in ("pending", "confirmed"):
+        if not booking or not booking.active or booking.state not in ("pending", "scheduled", "confirmed"):
             return _json({"ok": False, "error": "booking_unavailable"}, 409)
         if not booking.access_token:
             return _json({"ok": False, "error": "booking_unavailable"}, 409)
@@ -130,7 +130,7 @@ class StarixAgendaApi(http.Controller):
         booking, error = self._authorized_booking(booking_id, body)
         if error:
             return error
-        if booking.state == "confirmed":
+        if booking.state in ("scheduled", "confirmed"):
             return _json({
                 "ok": True, "status": "confirmed", "timezone": _TIMEZONE,
                 "scheduledAt": _scheduled_at(booking),
@@ -158,7 +158,7 @@ class StarixAgendaApi(http.Controller):
         booking, error = self._authorized_booking(booking_id, body)
         if error:
             return error
-        if booking.state == "confirmed":
+        if booking.state in ("scheduled", "confirmed"):
             return _json({
                 "ok": True, "status": "confirmed",
                 "scheduledAt": _scheduled_at(booking),
