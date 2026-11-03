@@ -71,7 +71,7 @@ export default function ThankYouExperience() {
           <Image className="thank-you-mark" src="/brand/starix-mark.png" alt="" width={294} height={295} sizes="52px" priority />
           <p className="section-index">CONTACTO RECIBIDO</p>
         </div>
-        <h1>Gracias{name ? <span>, {name}</span> : " por dar el primer paso"}.</h1>
+        <h1>{name ? <>Gracias,<span className="thank-you-name">{name}.</span></> : "Gracias por dar el primer paso."}</h1>
         <p className="thank-you-lead">Ya recibimos tu información. Queremos conocer mejor tu proyecto para preparar una conversación útil para ti.</p>
         <div className="thank-you-next">
           <p className="thank-you-step">SIGUIENTE PASO · TU DIAGNÓSTICO</p>
