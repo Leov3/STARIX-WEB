@@ -44,3 +44,11 @@
 - Persistencia operativa: `JITSI_APP_SECRET`, `JITSI_APP_ID` y `JITSI_MEET_DOMAIN` están en la especificación activa de Docker Swarm, añadidas por `integrations/jitsi/deploy-web-prod.py`. Antes de un nuevo despliegue desde EasyPanel hay que registrar esas variables en el entorno de la app allí o volver a aplicar el script; no se ha comprobado que EasyPanel haya importado los cambios de Swarm. El secreto nunca debe entrar en Git.
 - Límite: audio y video se verificaron con dispositivos simulados; queda una llamada humana de aceptación. El correo con el enlace una hora antes permanece fuera de alcance, según la decisión del plan.
 - Commit de implementación y pruebas: `9335f93` y `d0b7b96`. Registro: este archivo.
+
+## Corrección de reserva con contacto · 2026-11-03
+
+- Síntoma: al pulsar «Confirmar videollamada», la agenda volvía al selector. Odoo devolvía `409 slot_taken` aunque había ofrecido el horario; la web borraba el aviso durante la recarga.
+- Causa comprobada: con un contacto en la reserva, la confirmación de asistencia del módulo gratuito de Odoo provocaba una nueva validación que interpretaba el evento recién creado como un conflicto. Se reprodujo con una reserva sintética con contacto. La misma reserva sin contacto se confirmaba.
+- Ajuste: el flujo STARIX conserva el evento creado al asignar la fecha y evita esa aceptación automática de asistencia en la ruta de agenda. Registra la actividad «Preparar videollamada STARIX» en la misma transacción y envía el aviso a n8n después de guardar la reserva. El formulario conserva el mensaje si Odoo rechaza un horario y vuelve a cargar disponibilidad.
+- Prueba: una reserva sintética con contacto confirmó por la API pública un horario distinto del primero; Odoo quedó en estado `scheduled`, vinculó el evento y movió la oportunidad a «Videollamada agendada». Se verificó la actividad de preparación. La reserva, la oportunidad, el evento y el contacto de ensayo se retiraron y se verificó su ausencia.
+- Límite: queda comprobar el clic en un navegador de un visitante real después de publicar el frontend. Los registros de producción permiten distinguir un horario ocupado de un fallo de calendario sin exponer el token del cliente.

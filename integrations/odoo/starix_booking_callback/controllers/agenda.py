@@ -188,12 +188,15 @@ class StarixAgendaApi(http.Controller):
         if booking.state != "pending":
             return _json({"ok": False, "error": "booking_unavailable"}, 409)
         if not any(slot.astimezone(timezone.utc) == when_utc for slot in _available_slots(booking, start)):
+            _logger.warning("STARIX agenda booking %s: slot unavailable on recheck", booking_id)
             return _json({"ok": False, "error": "slot_taken"}, 409)
         try:
             with request.env.cr.savepoint():
                 booking.start = when_utc.replace(tzinfo=None)
-                booking.action_confirm()
+                booking.with_context(starix_skip_attendance_confirmation=True).action_confirm()
+            booking._queue_starix_callback()
         except ValidationError:
+            _logger.warning("STARIX agenda booking %s: calendar validation failed", booking_id)
             return _json({"ok": False, "error": "slot_taken"}, 409)
         except Exception:
             _logger.exception("STARIX agenda could not confirm booking %s", booking_id)

@@ -38,7 +38,8 @@ if "--confirm" not in os.sys.argv:
     raise SystemExit(0)
 if not slots:
     raise SystemExit("no_slots_to_confirm")
-status, confirmed = post("/api/agenda/confirm", {"when": slots[0]})
+slot_index = int(os.environ.get("JITSI_TEST_SLOT_INDEX", "0"))
+status, confirmed = post("/api/agenda/confirm", {"when": slots[slot_index]})
 if status != 200 or not confirmed.get("ok") or not confirmed.get("meetingUrl"):
     raise SystemExit(json.dumps({"step": "confirm", "status": status, "error": confirmed.get("error")}))
 print(json.dumps({"step": "confirm", "status": confirmed.get("status"), "meetingLink": True, "scheduledAt": confirmed.get("scheduledAt")}))

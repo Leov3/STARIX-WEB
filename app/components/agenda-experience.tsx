@@ -105,7 +105,7 @@ export default function AgendaExperience() {
       return;
     }
     const controller = new AbortController();
-    setView("loading"); setMessage(""); setSelectedSlot(""); setShowAllDays(false);
+    setView("loading"); setSelectedSlot(""); setShowAllDays(false);
     void (async () => {
       try {
         const response = await fetch("/api/agenda/slots", {
@@ -114,6 +114,7 @@ export default function AgendaExperience() {
         });
         const result = await response.json() as AgendaPayload;
         if (!response.ok || !result.ok) throw new Error(result.error || "agenda_unavailable");
+        if (controller.signal.aborted) return;
         setContactName(result.contactName || "");
         if (result.status === "confirmed" && result.scheduledAt) { setScheduledAt(result.scheduledAt); setMeetingUrl(result.meetingUrl || ""); setView("confirmed"); return; }
         const next = Array.isArray(result.slots) ? result.slots : [];
@@ -148,7 +149,7 @@ export default function AgendaExperience() {
       if (!response.ok || !result.ok || !result.scheduledAt) {
         if (result.error === "slot_taken") {
           setSelectedSlot("");
-          setMessage("Ese horario acaba de ocuparse. Elige otro disponible.");
+          setMessage("No pudimos reservar ese horario. Actualizamos la disponibilidad; elige otro horario o escríbenos si vuelve a ocurrir.");
           setRefreshKey((current) => current + 1);
         } else setMessage("No pudimos confirmar la reserva. Inténtalo de nuevo.");
         return;
