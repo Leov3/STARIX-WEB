@@ -8,7 +8,7 @@ import { GAP_SESSION_KEY, evaluateQualification, isGapBranch, questionsForBranch
 
 type StoredSession = { token: string; branch: GapBranch; name?: string };
 type ViewState = "loading" | "question" | "missing" | "unavailable" | "result";
-type SessionResponse = { branch: GapBranch; answers: GapAnswers; currentStep: number; qualificationStatus?: GapQualification; bookingUrl?: string };
+type SessionResponse = { branch: GapBranch; answers: GapAnswers; currentStep: number; qualificationStatus?: GapQualification; bookingAvailable?: boolean };
 const whatsappNumber = "573226912001";
 
 function getSession(): StoredSession | null {
@@ -31,7 +31,7 @@ export default function GapExperience() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [qualification, setQualification] = useState<GapQualification | null>(null);
-  const [bookingUrl, setBookingUrl] = useState("");
+  const [bookingAvailable, setBookingAvailable] = useState(false);
   const [preview, setPreview] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const { scrollYProgress } = useScroll({ target: pageRef, offset: ["start start", "end start"] });
@@ -91,7 +91,7 @@ export default function GapExperience() {
         setSession({ ...stored, branch: payload.branch });
         setAnswers(payload.answers || {});
         setStep(Math.min(Math.max(payload.currentStep || 0, 0), nextQuestions.length - 1));
-        setBookingUrl(payload.bookingUrl || "");
+        setBookingAvailable(Boolean(payload.bookingAvailable));
         if (payload.qualificationStatus === "HIGH_PRIORITY" || payload.qualificationStatus === "MEDIUM_PRIORITY" || payload.qualificationStatus === "MANUAL_REVIEW") {
           setQualification(payload.qualificationStatus);
           setView("result");
@@ -136,8 +136,8 @@ export default function GapExperience() {
     try {
       const response = await fetch("/api/gap/complete", { method: "POST", headers: { "Content-Type": "application/json", "x-starix-gap-token": session.token }, body: JSON.stringify({ branch: session.branch, answers }) });
       if (!response.ok) throw new Error("completion_failed");
-      const payload = await response.json() as { qualificationStatus: GapQualification; bookingUrl?: string };
-      setQualification(payload.qualificationStatus); setBookingUrl(payload.bookingUrl || ""); setView("result");
+      const payload = await response.json() as { qualificationStatus: GapQualification; bookingAvailable?: boolean };
+      setQualification(payload.qualificationStatus); setBookingAvailable(Boolean(payload.bookingAvailable)); setView("result");
       track("diagnostico_completado");
     } catch { setError("No pudimos completar el diagnóstico. Tus respuestas siguen disponibles; inténtalo de nuevo."); }
     finally { setSaving(false); }
@@ -208,7 +208,7 @@ export default function GapExperience() {
       {view === "loading" && <div className="gap-card gap-status"><h1>Estamos preparando tu diagnóstico.</h1></div>}
       {view === "missing" && <div className="gap-card gap-status"><h1>Necesitamos iniciar desde contacto.</h1><p>Completa el formulario de contacto para recibir un acceso seguro al diagnóstico.</p><Link href="/#contacto" className="gap-submit">Ir a contacto <span aria-hidden="true">↗</span></Link></div>}
       {view === "unavailable" && <div className="gap-card gap-status"><h1>No pudimos recuperar tu diagnóstico.</h1><p>Tu contacto sigue registrado. Inténtalo de nuevo más tarde o escríbenos por WhatsApp.</p><a className="gap-submit" href={whatsappUrl} target="_blank" rel="noreferrer">Hablar por WhatsApp <span aria-hidden="true">↗</span></a></div>}
-      {view === "result" && <div className="gap-card gap-status"><h1>{resultContent.title}</h1><p>{resultContent.text}</p>{preview ? <span className="gap-submit gap-preview-cta">{eligibleForBooking ? "Agendar videollamada" : "Hablar por WhatsApp"} <span aria-hidden="true">↗</span></span> : eligibleForBooking && bookingUrl ? <a className="gap-submit" href={bookingUrl} target="_blank" rel="noreferrer" onClick={() => track("agenda_mostrada")}>Agendar videollamada <span aria-hidden="true">↗</span></a> : eligibleForBooking ? <p className="gap-booking-note">Estamos preparando la disponibilidad. Te contactaremos para coordinar la videollamada.</p> : <a className="gap-submit" href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => track("whatsapp_desde_resultado")}>Hablar por WhatsApp <span aria-hidden="true">↗</span></a>}</div>}
+      {view === "result" && <div className="gap-card gap-status"><h1>{resultContent.title}</h1><p>{resultContent.text}</p>{preview && eligibleForBooking ? <Link className="gap-submit" href="/agenda?preview=1">Agendar videollamada <span aria-hidden="true">↗</span></Link> : preview ? <span className="gap-submit gap-preview-cta">Hablar por WhatsApp <span aria-hidden="true">↗</span></span> : eligibleForBooking && bookingAvailable ? <Link className="gap-submit" href="/agenda" onClick={() => track("agenda_mostrada")}>Agendar videollamada <span aria-hidden="true">↗</span></Link> : eligibleForBooking ? <p className="gap-booking-note">Estamos preparando la disponibilidad. Te contactaremos para coordinar la videollamada.</p> : <a className="gap-submit" href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => track("whatsapp_desde_resultado")}>Hablar por WhatsApp <span aria-hidden="true">↗</span></a>}</div>}
       {view === "question" && question && <AnimatePresence mode="wait"><motion.div key={question.id} className="gap-card gap-question" initial={{ opacity: 0, y: reduced ? 0 : 28 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reduced ? 0 : -28 }} transition={{ duration: reduced ? 0 : .3, ease: [0.22, 1, 0.36, 1] }}>
         <div className="gap-meta"><p>PREGUNTA {step + 1} DE {questions.length}</p><p>{step + 1} / {questions.length}</p></div><div className="gap-progress" aria-hidden="true"><i style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div>
         <h1 ref={headingRef} tabIndex={-1}>{question.prompt}</h1>

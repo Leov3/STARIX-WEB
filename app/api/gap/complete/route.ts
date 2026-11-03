@@ -32,6 +32,6 @@ export async function POST(request: Request) {
     if (qualificationStatus !== "HIGH_PRIORITY" && qualificationStatus !== "MEDIUM_PRIORITY" && qualificationStatus !== "MANUAL_REVIEW") return NextResponse.json({ ok: false, error: "invalid_upstream_response" }, { status: 502 });
     const bookingUrl = bookingUrlFrom(result.bookingUrl);
     if ((qualificationStatus === "HIGH_PRIORITY" || qualificationStatus === "MEDIUM_PRIORITY") && !bookingUrl) return NextResponse.json({ ok: false, error: "booking_unavailable" }, { status: 502 });
-    return NextResponse.json({ ok: true, qualificationStatus, qualificationReason: result.qualificationReason || decision.qualificationReason, bookingUrl: bookingUrl || undefined });
+    return NextResponse.json({ ok: true, qualificationStatus, qualificationReason: result.qualificationReason || decision.qualificationReason, bookingAvailable: Boolean(bookingUrl) });
   } catch { return NextResponse.json({ ok: false, error: "upstream_unavailable" }, { status: 502 }); }
 }
