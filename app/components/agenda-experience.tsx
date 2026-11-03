@@ -98,6 +98,12 @@ export default function AgendaExperience() {
     if (!month || (!preview && !token)) return;
     if (preview) {
       const next = previewSlots(month);
+      if (new URLSearchParams(window.location.search).get("estado") === "confirmada") {
+        setScheduledAt(next[0] || previewSlots(addMonths(month, 1))[0]);
+        setMeetingUrl("/reunion?preview=1");
+        setView("confirmed");
+        return;
+      }
       setSlots(next);
       setSelectedDay(next.length ? dateKey(new Date(next[0])) : "");
       setSelectedSlot("");
