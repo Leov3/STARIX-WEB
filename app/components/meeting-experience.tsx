@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 type Screen = "loading" | "missing" | "prejoin" | "connecting" | "meeting" | "ended" | "error";
+type SessionPayload = { ok?: boolean; room?: string; jwt?: string; role?: "client" | "staff"; contactName?: string; scheduledAt?: string; name?: string; domain?: string };
 type JitsiApi = {
   addEventListener: (event: string, listener: () => void) => void;
   dispose: () => void;
@@ -18,7 +19,7 @@ const dateLabel = new Intl.DateTimeFormat("es-CO", {
   timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", hour12: true,
 });
 
-function loadJitsiScript() {
+function loadJitsiScript(domain: string) {
   return new Promise<void>((resolve, reject) => {
     if (window.JitsiMeetExternalAPI) { resolve(); return; }
     const existing = document.querySelector<HTMLScriptElement>('script[data-starix-jitsi="true"]');
@@ -28,7 +29,7 @@ function loadJitsiScript() {
       return;
     }
     const script = document.createElement("script");
-    script.src = "https://meet.starix.tech/external_api.js";
+    script.src = `https://${domain}/external_api.js`;
     script.async = true;
     script.dataset.starixJitsi = "true";
     script.onload = () => resolve();
@@ -44,18 +45,37 @@ export default function MeetingExperience() {
   const [deviceReady, setDeviceReady] = useState(false);
   const [preview, setPreview] = useState(false);
   const [room, setRoom] = useState("");
+  const [jwt, setJwt] = useState("");
+  const [domain, setDomain] = useState("meet.starix.tech");
+  const [role, setRole] = useState<"client" | "staff">("client");
+  const [scheduledAt, setScheduledAt] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiApi | null>(null);
-  const date = new Date(Date.now() + 86_400_000);
+  const date = scheduledAt ? new Date(scheduledAt) : new Date(Date.now() + 86_400_000);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("preview") === "1") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("preview") === "1") {
       setPreview(true);
-      setRoom(`StarixPreview${crypto.randomUUID().replace(/-/g, "")}`);
       setScreen("prejoin");
-    } else setScreen("missing");
+    } else {
+      void (async () => {
+        try {
+          const response = await fetch("/api/jitsi/session", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clientCode: params.get("acceso") || undefined }),
+            cache: "no-store",
+          });
+          const data = await response.json() as SessionPayload;
+          if (!response.ok || !data.ok || !data.room || !data.jwt || !data.scheduledAt || !data.role) { setScreen("missing"); return; }
+          setRoom(data.room); setJwt(data.jwt); setRole(data.role); setScheduledAt(data.scheduledAt); setDomain(data.domain || "meet.starix.tech");
+          setName(data.name || data.contactName || "Invitado STARIX");
+          setScreen("prejoin");
+        } catch { setScreen("error"); }
+      })();
+    }
     return () => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       apiRef.current?.dispose();
@@ -78,20 +98,22 @@ export default function MeetingExperience() {
   };
 
   const enter = async () => {
-    if (!room || !frameRef.current) return;
+    if (preview) { setDeviceMessage("Esta vista previa no abre una sala. Usa el enlace privado de una reserva confirmada."); return; }
+    if (!room || !jwt || !frameRef.current) return;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     setScreen("connecting");
     try {
-      await loadJitsiScript();
+      await loadJitsiScript(domain);
       if (!window.JitsiMeetExternalAPI || !frameRef.current) throw new Error("api_missing");
-      const api = new window.JitsiMeetExternalAPI("meet.starix.tech", {
+      const api = new window.JitsiMeetExternalAPI(domain, {
         roomName: room,
+        jwt,
         parentNode: frameRef.current,
         width: "100%",
         height: "100%",
         lang: "es",
-        userInfo: { displayName: name.trim() || "Invitado STARIX" },
+        userInfo: { displayName: role === "staff" ? name : (name.trim() || "Invitado STARIX") },
         configOverwrite: { prejoinConfig: { enabled: false }, startWithAudioMuted: !deviceReady, startWithVideoMuted: !deviceReady },
         interfaceConfigOverwrite: { APP_NAME: "STARIX", PROVIDER_NAME: "STARIX" },
       });
@@ -111,8 +133,8 @@ export default function MeetingExperience() {
       <div className="meeting-intro"><Image src="/brand/starix-mark.png" alt="" width={48} height={48} /><p className="section-index">REUNIONES STARIX</p></div>
       {screen === "loading" ? <p className="meeting-muted">Preparando tu espacio…</p> : null}
       {screen === "missing" ? <div className="meeting-panel"><p className="agenda-kicker">ACCESO PRIVADO</p><h1>Tu reunión empieza con una invitación.</h1><p>Abre el enlace asociado a tu reserva para entrar a la videollamada.</p><Link className="gap-submit" href="/">Volver a STARIX ↗</Link></div> : null}
-      {screen === "prejoin" ? <div className="meeting-panel"><p className="agenda-kicker">TU VIDEOLLAMADA</p><h1>Un espacio para conversar sobre tu proyecto.</h1><p>Nos encontraremos para revisar tu diagnóstico y decidir juntos el siguiente paso.</p><div className="meeting-details"><span>Invitado</span><strong>{name.trim() || "Invitado STARIX"}</strong><span>Horario</span><strong>{dateLabel.format(date)} · hora de Colombia</strong></div><label className="meeting-label" htmlFor="meeting-name">Tu nombre</label><input id="meeting-name" className="meeting-input" value={name} onChange={(event) => setName(event.target.value)} maxLength={120} autoComplete="name" /><div className="meeting-device"><video ref={videoRef} autoPlay muted playsInline aria-label="Vista previa de tu cámara" /><div><strong>Antes de entrar</strong><p>Comprueba tu cámara y micrófono. Puedes continuar si prefieres entrar sin video.</p><button type="button" className="gap-previous" onClick={() => void checkDevices()}>Probar dispositivos</button>{deviceMessage && <p className="meeting-device-message" role="status">{deviceMessage}</p>}</div></div><button type="button" className="gap-submit meeting-join" onClick={() => void enter()}>Entrar a la sala <span aria-hidden="true">↗</span></button></div> : null}
-      {screen === "connecting" || screen === "meeting" ? <div className="meeting-call"><div className="meeting-call-heading"><div><p className="agenda-kicker">VIDEOLLAMADA STARIX</p><h1>{screen === "connecting" ? "Conectando con tu sala…" : "Ya estás en la sala."}</h1></div><span>30 minutos · hora de Colombia</span></div><div className="meeting-frame" ref={frameRef} aria-label="Videollamada STARIX" /></div> : <div className="meeting-frame-hidden" ref={frameRef} />}
+      {screen === "prejoin" ? <div className="meeting-panel"><p className="agenda-kicker">TU VIDEOLLAMADA</p><h1>Un espacio para conversar sobre tu proyecto.</h1><p>{role === "staff" ? "Revisa el diagnóstico de la oportunidad antes de comenzar y admite al cliente cuando llegue." : "Nos encontraremos para revisar tu diagnóstico y decidir juntos el siguiente paso."}</p><div className="meeting-details"><span>{role === "staff" ? "Colaborador" : "Invitado"}</span><strong>{name.trim() || "Invitado STARIX"}</strong><span>Horario</span><strong>{dateLabel.format(date)} · hora de Colombia</strong></div>{role === "client" && <><label className="meeting-label" htmlFor="meeting-name">Tu nombre</label><input id="meeting-name" className="meeting-input" value={name} onChange={(event) => setName(event.target.value)} maxLength={120} autoComplete="name" /></>}<div className="meeting-device"><video ref={videoRef} autoPlay muted playsInline aria-label="Vista previa de tu cámara" /><div><strong>Antes de entrar</strong><p>Comprueba tu cámara y micrófono. Puedes continuar si prefieres entrar sin video.</p><button type="button" className="gap-previous" onClick={() => void checkDevices()}>Probar dispositivos</button>{deviceMessage && <p className="meeting-device-message" role="status">{deviceMessage}</p>}</div></div><button type="button" className="gap-submit meeting-join" onClick={() => void enter()}>{preview ? "Ver acceso de prueba" : "Entrar a la sala"} <span aria-hidden="true">↗</span></button></div> : null}
+      {screen === "connecting" || screen === "meeting" ? <div className="meeting-call"><div className="meeting-call-heading"><div><p className="agenda-kicker">VIDEOLLAMADA STARIX</p><h1>{screen === "connecting" ? (role === "client" ? "Solicita entrar y espera al anfitrión." : "Conectando con tu sala…") : "Ya estás en la sala."}</h1></div><span>30 minutos · hora de Colombia</span></div><div className="meeting-frame" ref={frameRef} aria-label="Videollamada STARIX" /></div> : <div className="meeting-frame-hidden" ref={frameRef} />}
       {screen === "error" ? <div className="meeting-panel"><p className="agenda-kicker">NO PUDIMOS CONECTAR</p><h1>Volvamos a intentarlo.</h1><p>Comprueba tu conexión y vuelve a entrar a la sala.</p><button type="button" className="gap-submit" onClick={() => void enter()}>Reintentar ↗</button></div> : null}
       {screen === "ended" ? <div className="meeting-panel"><p className="agenda-kicker">CONVERSACIÓN FINALIZADA</p><h1>Gracias por conversar con STARIX.</h1><p>Revisaremos los próximos pasos y daremos seguimiento a lo acordado.</p><Link className="gap-submit" href="/">Volver a STARIX ↗</Link></div> : null}
     </section>

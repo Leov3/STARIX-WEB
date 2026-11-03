@@ -7,6 +7,13 @@ from odoo import api, fields, models
 class CrmLead(models.Model):
     _inherit = "crm.lead"
 
+    def action_open_starix_meeting(self):
+        self.ensure_one()
+        booking_id = str(self.x_gap_booking_id or "")
+        if not booking_id.isdigit():
+            return False
+        return {"type": "ir.actions.act_url", "url": f"/starix/meeting/{booking_id}", "target": "new"}
+
     x_starix_attribution_json = fields.Text(string="Atribución STARIX")
 
     starix_area_label = fields.Char(string="Área de interés", compute="_compute_starix_display")

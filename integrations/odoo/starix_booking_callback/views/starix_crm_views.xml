@@ -5,6 +5,10 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//form/header" position="inside">
+                <field name="x_gap_booking_id" invisible="1"/>
+                <button name="action_open_starix_meeting" type="object" string="Entrar a videollamada STARIX" class="btn-primary" invisible="not x_gap_booking_id"/>
+            </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="Información STARIX" name="starix_information">
                     <group string="Diagnóstico">
