@@ -32,6 +32,14 @@ export async function POST(request: Request) {
   const company = readText(data.company, 160);
   const interest = readText(data.interest, 64);
   const page = readText(data.page, 240) || "/";
+  const attributionData = data.attribution && typeof data.attribution === "object" && !Array.isArray(data.attribution)
+    ? data.attribution as Record<string, unknown>
+    : {};
+  const attribution = {
+    utmSource: readText(attributionData.utmSource, 100),
+    utmMedium: readText(attributionData.utmMedium, 100),
+    utmCampaign: readText(attributionData.utmCampaign, 100),
+  };
   const meetingDate = readText(data.meetingDate, 10);
   const meetingTime = readText(data.meetingTime, 5);
   const timezone = readText(data.timezone, 100);
@@ -74,6 +82,7 @@ export async function POST(request: Request) {
     consentVersion: "starix-privacy-draft-0.1",
     consentedAt: consent ? new Date().toISOString() : undefined,
     source: "starix_web",
+    attribution,
     page,
     meetingRequest: hasMeetingRequest ? { date: meetingDate, time: meetingTime, timezone, projectContext } : undefined,
     gap: hasGap ? { goal: gapGoal, challenge: gapChallenge, timeline: gapTimeline, teamSize: gapTeamSize } : undefined,

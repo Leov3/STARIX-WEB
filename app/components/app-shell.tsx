@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import Navbar from "@/app/components/navbar";
+import { getContactAttribution } from "@/app/lib/attribution";
 
 type RouteDirection = "forward" | "backward";
 type CurtainVariant = "solar" | "constellation" | "rings" | "signal" | "eclipse";
@@ -104,6 +105,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.add("motion-ready");
   }, []);
+
+  useEffect(() => {
+    getContactAttribution();
+  }, [pathname]);
 
   const navigate = useCallback((href: string, direction: RouteDirection) => {
     if (isNavigating) return;

@@ -5,6 +5,7 @@ import { FormEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { GAP_SESSION_KEY, interestToBranch, type GapBranch } from "@/app/lib/gap";
+import { getContactAttribution } from "@/app/lib/attribution";
 
 const interests = [
   { value: "product_platform", label: "Crear un sitio web o producto digital" },
@@ -133,6 +134,7 @@ export default function ContactSection() {
           phone: form.phone.trim(),
           company: form.company?.trim() || "",
           page: window.location.pathname,
+          attribution: getContactAttribution(),
         }),
       });
 
