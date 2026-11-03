@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { GAP_SESSION_KEY, questionsForBranch, validateGapAnswer, type GapAnswers, type GapBranch, type GapQualification } from "@/app/lib/gap";
+import { GAP_SESSION_KEY, evaluateQualification, isGapBranch, questionsForBranch, validateGapAnswer, type GapAnswers, type GapBranch, type GapQualification } from "@/app/lib/gap";
 
 type StoredSession = { token: string; branch: GapBranch; name?: string };
 type ViewState = "loading" | "question" | "missing" | "unavailable" | "result";
@@ -30,15 +30,34 @@ export default function GapExperience() {
   const [error, setError] = useState("");
   const [qualification, setQualification] = useState<GapQualification | null>(null);
   const [bookingUrl, setBookingUrl] = useState("");
+  const [preview, setPreview] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const track = (event: string, questionId?: string) => {
-    if (!session) return;
+    if (!session || preview) return;
     void fetch("/api/gap/event", { method: "POST", headers: { "Content-Type": "application/json", "x-starix-gap-token": session.token }, body: JSON.stringify({ event, questionId }) });
   };
 
   useEffect(() => {
     void (async () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("preview") === "1") {
+        const requestedBranch = params.get("branch");
+        const branch = isGapBranch(requestedBranch) ? requestedBranch : "WEB_PRODUCT";
+        const requestedStep = Number(params.get("step") || 0);
+        const nextStep = Number.isFinite(requestedStep) ? Math.min(Math.max(Math.floor(requestedStep), 0), 5) : 0;
+        const result = params.get("result");
+        setPreview(true);
+        setSession({ token: "", branch, name: "Alex" });
+        setStep(nextStep);
+        if (result === "high" || result === "medium" || result === "exploratory") {
+          setQualification(result === "high" ? "HIGH_PRIORITY" : result === "medium" ? "MEDIUM_PRIORITY" : "MANUAL_REVIEW");
+          setView("result");
+        } else {
+          setView("question");
+        }
+        return;
+      }
       const stored = getSession();
       if (!stored) { setView("missing"); return; }
       setSession(stored);
@@ -73,6 +92,7 @@ export default function GapExperience() {
 
   const persist = async (nextAnswer: string) => {
     if (!session || !question) return false;
+    if (preview) return true;
     setSaving(true); setError("");
     try {
       const response = await fetch("/api/gap/save", { method: "POST", headers: { "Content-Type": "application/json", "x-starix-gap-token": session.token }, body: JSON.stringify({ branch: session.branch, questionId: question.id, answer: nextAnswer, currentStep: step }) });
@@ -84,6 +104,12 @@ export default function GapExperience() {
 
   const complete = async () => {
     if (!session) return;
+    if (preview) {
+      const outcome = evaluateQualification(session.branch, answers);
+      setQualification(outcome.qualificationStatus === "PENDING" ? "MEDIUM_PRIORITY" : outcome.qualificationStatus);
+      setView("result");
+      return;
+    }
     setSaving(true); setError("");
     try {
       const response = await fetch("/api/gap/complete", { method: "POST", headers: { "Content-Type": "application/json", "x-starix-gap-token": session.token }, body: JSON.stringify({ branch: session.branch, answers }) });
@@ -97,6 +123,11 @@ export default function GapExperience() {
 
   const continueQuestion = async () => {
     if (!question) return;
+    if (preview) {
+      if (step < questions.length - 1) setStep((value) => value + 1);
+      else await complete();
+      return;
+    }
     const answer = answers[question.id] || "";
     const validation = validateGapAnswer(question, answer);
     if (validation) { setError(validation); return; }
@@ -117,12 +148,36 @@ export default function GapExperience() {
   return <main className="gap-page">
     <div className="gap-scene" aria-hidden="true" />
     <section className="gap-content" aria-live="polite">
-      <Link className="gap-back" href="/gracias">← Volver</Link>
+      {preview && <div className="gap-preview-toolbar" aria-label="Controles de vista previa">
+        <span>VISTA PREVIA · SIN ENVÍOS</span>
+        <label>Ruta
+          <select value={session?.branch || "WEB_PRODUCT"} onChange={(event) => { window.location.href = `/diagnostico?preview=1&branch=${event.target.value}`; }}>
+            <option value="WEB_PRODUCT">Sitio web / producto</option>
+            <option value="AUTOMATION">Automatización</option>
+            <option value="BRAND_DIGITAL">Marca / presencia digital</option>
+            <option value="UNDEFINED">No estoy seguro</option>
+          </select>
+        </label>
+        <label>Pantalla
+          <select value={view === "result" ? qualification === "HIGH_PRIORITY" ? "high" : qualification === "MEDIUM_PRIORITY" ? "medium" : "exploratory" : "questions"} onChange={(event) => { window.location.href = `/diagnostico?preview=1&branch=${session?.branch || "WEB_PRODUCT"}${event.target.value === "questions" ? "" : `&result=${event.target.value}`}`; }}>
+            <option value="questions">Preguntas</option>
+            <option value="high">Resultado con agenda A</option>
+            <option value="medium">Resultado con agenda B</option>
+            <option value="exploratory">Resultado WhatsApp</option>
+          </select>
+        </label>
+        {view === "question" && <label>Pregunta
+          <select value={step} onChange={(event) => setStep(Number(event.target.value))}>
+            {questions.map((item, index) => <option value={index} key={item.id}>{index + 1} de {questions.length}</option>)}
+          </select>
+        </label>}
+      </div>}
+      <Link className="gap-back" href={preview ? "/gracias?preview=1" : "/gracias"}>← Volver</Link>
       <Image className="gap-mark" src="/brand/starix-mark.png" alt="" width={294} height={295} sizes="64px" priority />
       {view === "loading" && <div className="gap-card gap-status"><p className="section-index">DIAGNÓSTICO</p><h1>Estamos preparando tu diagnóstico.</h1></div>}
       {view === "missing" && <div className="gap-card gap-status"><p className="section-index">DIAGNÓSTICO</p><h1>Necesitamos iniciar desde contacto.</h1><p>Completa el formulario de contacto para recibir un acceso seguro al diagnóstico.</p><Link href="/#contacto" className="gap-submit">Ir a contacto <span aria-hidden="true">↗</span></Link></div>}
       {view === "unavailable" && <div className="gap-card gap-status"><p className="section-index">DIAGNÓSTICO</p><h1>No pudimos recuperar tu diagnóstico.</h1><p>Tu contacto sigue registrado. Inténtalo de nuevo más tarde o escríbenos por WhatsApp.</p><a className="gap-submit" href={whatsappUrl} target="_blank" rel="noreferrer">Hablar por WhatsApp <span aria-hidden="true">↗</span></a></div>}
-      {view === "result" && <div className="gap-card gap-status"><p className="section-index">DIAGNÓSTICO COMPLETADO</p><h1>{resultContent.title}</h1><p>{resultContent.text}</p>{eligibleForBooking && bookingUrl ? <a className="gap-submit" href={bookingUrl} target="_blank" rel="noreferrer" onClick={() => track("agenda_mostrada")}>Agendar videollamada <span aria-hidden="true">↗</span></a> : eligibleForBooking ? <p className="gap-booking-note">Estamos preparando la disponibilidad. Te contactaremos para coordinar la videollamada.</p> : <a className="gap-submit" href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => track("whatsapp_desde_resultado")}>Hablar por WhatsApp <span aria-hidden="true">↗</span></a>}</div>}
+      {view === "result" && <div className="gap-card gap-status"><p className="section-index">DIAGNÓSTICO COMPLETADO</p><h1>{resultContent.title}</h1><p>{resultContent.text}</p>{preview ? <span className="gap-submit gap-preview-cta">{eligibleForBooking ? "Agendar videollamada" : "Hablar por WhatsApp"} <span aria-hidden="true">↗</span></span> : eligibleForBooking && bookingUrl ? <a className="gap-submit" href={bookingUrl} target="_blank" rel="noreferrer" onClick={() => track("agenda_mostrada")}>Agendar videollamada <span aria-hidden="true">↗</span></a> : eligibleForBooking ? <p className="gap-booking-note">Estamos preparando la disponibilidad. Te contactaremos para coordinar la videollamada.</p> : <a className="gap-submit" href={whatsappUrl} target="_blank" rel="noreferrer" onClick={() => track("whatsapp_desde_resultado")}>Hablar por WhatsApp <span aria-hidden="true">↗</span></a>}</div>}
       {view === "question" && question && <AnimatePresence mode="wait"><motion.div key={question.id} className="gap-card gap-question" initial={{ opacity: 0, y: reduced ? 0 : 28 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reduced ? 0 : -28 }} transition={{ duration: reduced ? 0 : .3, ease: [0.22, 1, 0.36, 1] }}>
         <div className="gap-meta"><p className="section-index">TU DIAGNÓSTICO</p><p>{step + 1} / {questions.length}</p></div><div className="gap-progress" aria-hidden="true"><i style={{ width: `${((step + 1) / questions.length) * 100}%` }} /></div>
         <h1 ref={headingRef} tabIndex={-1}>{question.prompt}</h1>

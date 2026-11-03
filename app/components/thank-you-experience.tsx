@@ -13,6 +13,7 @@ export default function ThankYouExperience() {
   const pageRef = useRef<HTMLElement>(null);
   const prefersReducedMotion = useReducedMotion();
   const [name, setName] = useState("");
+  const [preview, setPreview] = useState(false);
   const { scrollYProgress } = useScroll({ target: pageRef, offset: ["start start", "end start"] });
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.55 });
   const earthY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [160, 160] : [160, 20]);
@@ -23,6 +24,11 @@ export default function ThankYouExperience() {
   const astronautScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [1, 1.035]);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("preview") === "1") {
+      setPreview(true);
+      setName("Alex");
+      return;
+    }
     try {
       const saved = sessionStorage.getItem(GAP_SESSION_KEY);
       const session = saved ? JSON.parse(saved) as StoredSession : null;
@@ -45,6 +51,7 @@ export default function ThankYouExperience() {
         <motion.div className="hero-astronaut" style={{ y: astronautY, scale: astronautScale }} animate={prefersReducedMotion ? undefined : { x: [0, 8, 0, -6, 0], rotate: [0, .45, 0, -.3, 0] }} transition={{ duration: 20, ease: "easeInOut", repeat: Infinity, repeatType: "mirror" }} />
       </div>
       <section className="thank-you-content">
+        {preview && <p className="preview-flag">VISTA PREVIA · DATOS FICTICIOS</p>}
         <p className="section-index">CONTACTO RECIBIDO</p>
         <p className="thank-you-step">PASO 1 COMPLETADO · SIGUIENTE: TU DIAGNÓSTICO</p>
         <Image className="thank-you-mark" src="/brand/starix-mark.png" alt="" width={294} height={295} sizes="(max-width: 620px) 72px, 112px" priority />
@@ -52,12 +59,12 @@ export default function ThankYouExperience() {
         <p>Ya recibimos tu información. Ahora queremos entender mejor tu contexto para preparar una conversación que aporte a tu proyecto.</p>
         <p>Continúa con tu diagnóstico. En pocos minutos podremos identificar dónde estás hoy, qué quieres mejorar y cuáles pueden ser tus próximos pasos.</p>
         <div className="thank-you-actions">
-          <Link href="/diagnostico" className="thank-you-link thank-you-link-primary">Iniciar mi diagnóstico <span aria-hidden="true">↗</span></Link>
+          <Link href={preview ? "/diagnostico?preview=1" : "/diagnostico"} className="thank-you-link thank-you-link-primary">Iniciar mi diagnóstico <span aria-hidden="true">↗</span></Link>
         </div>
         <div className="thank-you-divider" />
         <div className="thank-you-alternative">
           <p>¿Prefieres una respuesta rápida?</p>
-          <a href={whatsappUrl} target="_blank" rel="noreferrer">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>
+          {preview ? <span className="preview-static-link">Hablar por WhatsApp <span aria-hidden="true">↗</span></span> : <a href={whatsappUrl} target="_blank" rel="noreferrer">Hablar por WhatsApp <span aria-hidden="true">↗</span></a>}
         </div>
         <p className="thank-you-next-step">Tu información será tratada de forma confidencial y solo se usará para dar seguimiento a tu solicitud.</p>
       </section>
