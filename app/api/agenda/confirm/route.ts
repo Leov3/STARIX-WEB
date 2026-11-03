@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const result = await askOdoo(booking, "confirm", { when });
     if (!result.data.ok) return NextResponse.json({ ok: false, error: result.data.error || "booking_failed" }, { status: result.status === 400 || result.status === 409 ? result.status : 502 });
     return NextResponse.json({
-      ok: true, status: result.data.status,
+      ok: true, status: result.data.status, contactName: booking.contactName,
       scheduledAt: result.data.scheduledAt,
       durationMinutes: result.data.durationMinutes,
       timezone: "America/Bogota",

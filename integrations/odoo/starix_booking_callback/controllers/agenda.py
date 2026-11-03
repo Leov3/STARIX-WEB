@@ -100,6 +100,7 @@ class StarixAgendaApi(http.Controller):
         return _json({
             "ok": True, "bookingId": booking.id,
             "accessToken": booking.access_token,
+            "contactName": (leads.contact_name or leads.partner_id.name or "").strip(),
         })
 
     def _authorized_booking(self, booking_id, body):

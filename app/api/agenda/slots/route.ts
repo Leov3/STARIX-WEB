@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       status: result.data.status,
+      contactName: booking.contactName,
       timezone: "America/Bogota",
       durationMinutes: result.data.durationMinutes,
       slots: result.data.slots || [],

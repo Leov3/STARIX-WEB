@@ -23,7 +23,7 @@ if eligible:
         json={"token": lead.x_gap_token},
         headers={"x-starix-booking-secret": secret}, timeout=15,
     )
-    print(f"odoo_lookup_http={lookup.status_code} ok={lookup.json().get('ok')} booking_matches={lookup.json().get('bookingId') == booking.id}")
+    print(f"odoo_lookup_http={lookup.status_code} ok={lookup.json().get('ok')} booking_matches={lookup.json().get('bookingId') == booking.id} contact_name_matches={lookup.json().get('contactName') == (lead.contact_name or lead.partner_id.name or '').strip()}")
     month = datetime.now().strftime("%Y-%m")
     before = env["resource.booking"].sudo().search_count([])
     response = requests.post(

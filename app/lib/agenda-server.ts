@@ -1,6 +1,6 @@
 const ODOO_ORIGIN = "https://odoo.starix.tech";
 
-export type BookingRef = { id: string; accessToken: string };
+export type BookingRef = { id: string; accessToken: string; contactName: string };
 export type AgendaResponse = {
   ok?: boolean;
   error?: string;
@@ -23,9 +23,9 @@ export async function bookingForSession(token: string): Promise<BookingRef | nul
   });
   if (response.status === 409 || response.status === 401) return null;
   if (!response.ok) throw new Error("booking_lookup_failed");
-  const data = await response.json() as { ok?: boolean; bookingId?: number; accessToken?: string };
+  const data = await response.json() as { ok?: boolean; bookingId?: number; accessToken?: string; contactName?: string };
   if (!data.ok || !Number.isSafeInteger(data.bookingId) || !data.accessToken) return null;
-  return { id: String(data.bookingId), accessToken: data.accessToken };
+  return { id: String(data.bookingId), accessToken: data.accessToken, contactName: typeof data.contactName === "string" ? data.contactName.slice(0, 120) : "" };
 }
 
 export async function askOdoo(ref: BookingRef, action: "slots" | "confirm", payload: Record<string, string>): Promise<{ status: number; data: AgendaResponse }> {

@@ -1124,6 +1124,7 @@ html[data-route-transition="backward"]::view-transition-new(root) { z-index: 1; 
 
 .agenda-content .preview-flag { margin: 0 0 20px !important; }
 .agenda-state h1 { margin: 0; font-size: clamp(2.1rem, 3.2vw, 3.2rem); font-weight: 400; letter-spacing: -.055em; line-height: 1.05; }
+.agenda-state h1 .agenda-name { display: block; margin-top: 8px; color: var(--gold); font-size: .72em; line-height: 1.15; overflow-wrap: anywhere; }
 .agenda-state > p:not(.agenda-kicker) { margin: 17px 0 0; color: rgba(247,247,242,.75); font-size: 15px; line-height: 1.6; }
 .agenda-kicker { margin: 0 0 14px; color: var(--gold); font-family: var(--font-michroma), sans-serif; font-size: 9px; letter-spacing: .1em; }
 .agenda-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }

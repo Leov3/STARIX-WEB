@@ -6,7 +6,7 @@ import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "mo
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GAP_SESSION_KEY } from "@/app/lib/gap";
 
-type AgendaPayload = { ok: boolean; error?: string; status?: "pending" | "confirmed"; slots?: string[]; scheduledAt?: string; durationMinutes?: number };
+type AgendaPayload = { ok: boolean; error?: string; status?: "pending" | "confirmed"; slots?: string[]; scheduledAt?: string; durationMinutes?: number; contactName?: string };
 type View = "loading" | "ready" | "missing" | "error" | "confirmed";
 const timeZone = "America/Bogota";
 const dateFormatter = new Intl.DateTimeFormat("es-CO", { timeZone, weekday: "long", day: "numeric", month: "long" });
@@ -57,6 +57,7 @@ export default function AgendaExperience() {
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
+  const [contactName, setContactName] = useState("");
   const [view, setView] = useState<View>("loading");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -82,7 +83,7 @@ export default function AgendaExperience() {
   useEffect(() => {
     const currentMonth = monthKey(new Date());
     setMonth(currentMonth);
-    if (new URLSearchParams(window.location.search).get("preview") === "1") { setPreview(true); return; }
+    if (new URLSearchParams(window.location.search).get("preview") === "1") { setPreview(true); setContactName("María"); return; }
     try {
       const raw = sessionStorage.getItem(GAP_SESSION_KEY);
       const parsed = raw ? JSON.parse(raw) as { token?: string } : null;
@@ -111,6 +112,7 @@ export default function AgendaExperience() {
         });
         const result = await response.json() as AgendaPayload;
         if (!response.ok || !result.ok) throw new Error(result.error || "agenda_unavailable");
+        setContactName(result.contactName || "");
         if (result.status === "confirmed" && result.scheduledAt) { setScheduledAt(result.scheduledAt); setView("confirmed"); return; }
         const next = Array.isArray(result.slots) ? result.slots : [];
         setSlots(next);
@@ -150,6 +152,7 @@ export default function AgendaExperience() {
         return;
       }
       setScheduledAt(result.scheduledAt);
+      if (result.contactName) setContactName(result.contactName);
       setView("confirmed");
     } catch { setMessage("No pudimos confirmar la reserva. Revisa tu conexión e inténtalo de nuevo."); }
     finally { setBusy(false); }
@@ -166,7 +169,13 @@ export default function AgendaExperience() {
       <Link className="gap-back" href={preview ? "/diagnostico?preview=1&result=medium" : "/diagnostico"}>← Volver al diagnóstico</Link>
       <div className="gap-intro"><Image className="gap-mark" src="/brand/starix-mark.png" alt="" width={294} height={295} sizes="48px" priority /><p className="section-index">AGENDA STARIX</p></div>
       {view === "missing" ? <div className="agenda-state"><h1>Primero completa tu diagnóstico.</h1><p>Así podremos preparar una conversación enfocada en tu proyecto.</p><Link className="gap-submit" href="/#contacto">Ir a contacto ↗</Link></div>
-        : view === "confirmed" ? <div className="agenda-state"><p className="agenda-kicker">VIDEOLLAMADA AGENDADA</p><h1>Nos vemos pronto.</h1><p>{preview ? "Esta es una confirmación de vista previa; no se creó ninguna reserva." : "Tu videollamada quedó agendada. Enviaremos la invitación a tu correo y revisaremos tu diagnóstico antes de conversar."}</p><div className="agenda-confirmed-date">{scheduledAt && `${labelDate(scheduledAt)} · ${labelTime(scheduledAt)}`}<span>30 minutos · hora de Colombia</span></div><Link href="/" className="gap-submit">Volver a STARIX ↗</Link></div>
+        : view === "confirmed" ? <div className="agenda-state">
+          <p className="agenda-kicker">VIDEOLLAMADA AGENDADA</p>
+          <h1>Nos vemos pronto{contactName ? <>, <span className="agenda-name">{contactName}.</span></> : "."}</h1>
+          <p>{preview ? "Esta es una confirmación de vista previa; no se creó ninguna reserva." : "Tu videollamada quedó agendada. Revisaremos tu diagnóstico antes de conversar para aprovechar mejor el tiempo."}</p>
+          <div className="agenda-confirmed-date">{scheduledAt && `${labelDate(scheduledAt)} · ${labelTime(scheduledAt)}`}<span>30 minutos · hora de Colombia</span></div>
+          <Link href="/" className="gap-submit">Volver a STARIX ↗</Link>
+        </div>
           : <div className="agenda-state"><p className="agenda-kicker">SIGUIENTE PASO · VIDEOLLAMADA</p><h1>Elige un momento para conversar.</h1><p>Una conversación de 30 minutos para revisar tu diagnóstico y definir los próximos pasos.</p><div className="agenda-summary"><span>30 minutos</span><span>Videollamada</span><span>Hora de Colombia</span></div>
             {view === "error" ? <div className="agenda-empty"><p>{message}</p><button type="button" className="gap-previous" onClick={() => setRefreshKey((current) => current + 1)}>Reintentar</button></div>
               : <><div className="agenda-month"><h2>{month ? labelMonth(month) : "Disponibilidad"}</h2><div><button type="button" aria-label="Mes anterior" disabled={monthOffset <= 0 || view === "loading"} onClick={() => setMonth((current) => addMonths(current, -1))}>←</button><button type="button" aria-label="Mes siguiente" disabled={monthOffset >= 5 || view === "loading"} onClick={() => setMonth((current) => addMonths(current, 1))}>→</button></div></div>
