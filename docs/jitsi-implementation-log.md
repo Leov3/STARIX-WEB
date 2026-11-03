@@ -9,3 +9,14 @@
 - Límite de la prueba: comprueba transporte WebRTC con dispositivos simulados; no sustituye la comprobación perceptiva de una llamada humana.
 - Reversión de esta fase: detener el ensayo con `docker compose -p starix-jitsi-stage -f /opt/jitsi-starix-stage/docker-compose.yml down`. Producción no se modificó en esta fase. El respaldo se conserva para fases posteriores.
 - Pendiente para fase 2: interfaz STARIX y personalización persistente de Jitsi en ensayo antes de producción.
+- Commit de fase 1: `6fd0e19`.
+
+## Fase 2 — Interfaz STARIX · 2026-11-03 · Completada en ensayo
+
+- Commit de implementación: `7b121f3`.
+- Se añadió `/reunion` con entrada, prueba opcional de cámara y micrófono, llamada integrada, estado de conexión y cierre. El acceso normal muestra una invitación privada requerida; `?preview=1` permite revisar el diseño con datos ficticios. La sesión real se conectará en la fase 3.
+- Se preparó la configuración persistente de Jitsi en `integrations/jitsi/custom-config.js` y `custom-interface_config.js`: idioma español, nombre STARIX, fondo oscuro, logo y tema dorado mediante `/api/jitsi/branding`.
+- Pruebas: `next build` completó sin errores. Capturas de Chromium a 1440×900 y tamaño iPhone 13 confirmaron encabezados, controles, márgenes y ausencia de desbordamiento horizontal. Jitsi de ensayo consultó `branding.json` con HTTP 200 y mostró el botón dorado y textos en español.
+- Resultado: interfaz validada en el contenedor web de ensayo; Jitsi y web públicos conservan su versión anterior hasta el lanzamiento de la fase 4.
+- Reversión: retirar los archivos `custom-config.js` y `custom-interface_config.js` del ensayo y recrear solo su contenedor `web`; los cambios web aún no se publicaron.
+- Pendiente para fase 3: acceso temporal vinculado a reservas, autenticación de colaboradores activos en Odoo y prueba de moderación y espera.
