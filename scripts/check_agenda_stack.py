@@ -45,4 +45,4 @@ if eligible:
         invalid_error = invalid.json().get("error")
     except ValueError:
         invalid_error = "non_json_response"
-    print(f"invalid_stack_confirm_http={invalid.status_code} error={invalid_error}")
+    print(f"invalid_stack_confirm_http={invalid.status_code} content_type={invalid.headers.get('Content-Type')} error={invalid_error}")
